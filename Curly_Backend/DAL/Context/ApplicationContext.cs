@@ -17,6 +17,10 @@ public class ApplicationContext : IdentityDbContext<ApplicationUser, IdentityRol
     
     public required DbSet<Client> Clients { get; set; }
     
+    public required DbSet<Admin> Admins { get; set; }
+    
+    public required DbSet<Review> Reviews { get; set; }
+    
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.Entity<ApplicationUser>().Property(u => u.Id).UseIdentityAlwaysColumn();
@@ -43,7 +47,8 @@ public class ApplicationContext : IdentityDbContext<ApplicationUser, IdentityRol
         
         builder.Entity<IdentityRole<int>>().HasData(
             new { Id = -1, Name = nameof(Barber), NormalizedName = nameof(Barber).ToUpper() },
-            new { Id = -2, Name = nameof(Client), NormalizedName = nameof(Client).ToUpper() });
+            new { Id = -2, Name = nameof(Client), NormalizedName = nameof(Client).ToUpper() },
+            new { Id = -3, Name = nameof(Admin), NormalizedName = nameof(Admin).ToUpper() });
         
         base.OnModelCreating(builder);
     }
