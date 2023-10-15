@@ -17,26 +17,30 @@ public class ApplicationContext : IdentityDbContext<ApplicationUser, IdentityRol
     
     public required DbSet<Client> Clients { get; set; }
     
-    // public required DbSet<BarberRole> BarberRoles { get; set; }
-    //
-    // public required DbSet<CustomerRole> CustomerRoles { get; set; }
-    
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.Entity<ApplicationUser>().Property(u => u.Id).UseIdentityAlwaysColumn();
         builder.Entity<ApplicationUser>().UseTptMappingStrategy();
         
-        builder.Entity<Favor>().HasKey(e => e.Id);
+        builder.Entity<Barber>().HasMany(b => b.Appointments).WithOne(a => a.Barber);
+        builder.Entity<Barber>().HasMany(b => b.Reviews).WithOne(r => r.Barber);
+        builder.Entity<Barber>().Ignore(b => b.Rating);
+        builder.Entity<Barber>().Ignore(b => b.Earnings);
+        
+        builder.Entity<Client>().HasMany(c => c.Appointments).WithOne(a => a.Client);
+        builder.Entity<Client>().HasMany(c => c.Reviews).WithOne(r => r.Publisher);
+        
+        builder.Entity<Favor>().HasKey(f => f.Id);
         builder.Entity<Favor>().Property(e => e.Id).UseIdentityAlwaysColumn();
+
+        builder.Entity<Review>().HasKey(r => r.Id);
+        builder.Entity<Review>().Property(r => r.Id).UseIdentityAlwaysColumn();
         
         builder.Entity<Appointment>().HasKey(e => e.Id);
         builder.Entity<Appointment>().Property(e => e.Id).UseIdentityAlwaysColumn();
         builder.Entity<Appointment>().HasMany(a => a.Favors).WithMany();
+        builder.Entity<Appointment>().Property(e => e.PlacedAt).HasDefaultValue(DateTime.UtcNow);
         
-        builder.Entity<Barber>().HasMany(b => b.Appointments);
-        
-        builder.Entity<Client>().HasMany(c => c.Appointments);
-
         builder.Entity<IdentityRole<int>>().HasData(
             new { Id = -1, Name = nameof(Barber), NormalizedName = nameof(Barber).ToUpper() },
             new { Id = -2, Name = nameof(Client), NormalizedName = nameof(Client).ToUpper() });

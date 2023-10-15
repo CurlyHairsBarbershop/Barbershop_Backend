@@ -58,8 +58,7 @@ public class JwtProvider<TUser> : IJwtProvider<TUser>
         {
             new("Email", member.Email),
             new("FirstName", member.FirstName),
-            new("LastName", member.LastName),
-            // new(ClaimTypes.Role, nameof(Barber))
+            new("LastName", member.LastName)
         };
         
         claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));

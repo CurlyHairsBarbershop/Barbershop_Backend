@@ -131,6 +131,11 @@ namespace DAL.Migrations
                     b.Property<int>("ClientId")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime>("PlacedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValue(new DateTime(2023, 10, 15, 18, 11, 55, 541, DateTimeKind.Utc).AddTicks(7180));
+
                     b.HasKey("Id");
 
                     b.HasIndex("BarberId");
@@ -148,6 +153,9 @@ namespace DAL.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<int>("Id"));
 
+                    b.Property<double>("Cost")
+                        .HasColumnType("double precision");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
@@ -159,6 +167,40 @@ namespace DAL.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Favors");
+                });
+
+            modelBuilder.Entity("Core.Review", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BarberId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("PublisherId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BarberId");
+
+                    b.HasIndex("PublisherId");
+
+                    b.ToTable("Review");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
@@ -355,6 +397,25 @@ namespace DAL.Migrations
                     b.Navigation("Client");
                 });
 
+            modelBuilder.Entity("Core.Review", b =>
+                {
+                    b.HasOne("Core.Barber", "Barber")
+                        .WithMany("Reviews")
+                        .HasForeignKey("BarberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Core.Client", "Publisher")
+                        .WithMany("Reviews")
+                        .HasForeignKey("PublisherId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Barber");
+
+                    b.Navigation("Publisher");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
@@ -427,11 +488,15 @@ namespace DAL.Migrations
             modelBuilder.Entity("Core.Barber", b =>
                 {
                     b.Navigation("Appointments");
+
+                    b.Navigation("Reviews");
                 });
 
             modelBuilder.Entity("Core.Client", b =>
                 {
                     b.Navigation("Appointments");
+
+                    b.Navigation("Reviews");
                 });
 #pragma warning restore 612, 618
         }

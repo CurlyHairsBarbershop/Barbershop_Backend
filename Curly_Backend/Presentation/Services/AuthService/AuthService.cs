@@ -41,13 +41,13 @@ public class AuthService<TUser> : IAuthService<TUser> where TUser : ApplicationU
 
         if (result.Succeeded)
         {
-            var barber = await _userManager.FindByEmailAsync(newBarber.Email);
+            var user = await _userManager.FindByEmailAsync(newBarber.Email);
             var role = typeof(TUser).Name;
             
-            await _userManager.AddToRoleAsync(barber, role);
+            await _userManager.AddToRoleAsync(user, role);
             
             var token = new JwtProvider<TUser>(_options.Value)
-                .GenerateJwtTokenString(barber, role);
+                .GenerateJwtTokenString(user, role);
             
             return (SignInResult.Success, token);
         }

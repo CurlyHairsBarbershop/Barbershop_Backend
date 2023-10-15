@@ -6,6 +6,8 @@ public class Appointment
     
     public DateTime At { get; set; }
     
+    public DateTime PlacedAt { get; set; }
+    
     public Barber Barber { get; set; }
     
     public Client Client { get; set; }
