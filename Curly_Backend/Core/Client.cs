@@ -2,9 +2,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Core;
 
-public class Client : IdentityUser
+public class Client : ApplicationUser
 {
-    //public int Id { get; set; }
-    public string SomeClientData { get; set; }
     public ICollection<Appointment> Appointments { get; set; }
 }
