@@ -44,6 +44,7 @@ public class ApplicationContext : IdentityDbContext<ApplicationUser, IdentityRol
         builder.Entity<Appointment>().Property(e => e.Id).UseIdentityAlwaysColumn();
         builder.Entity<Appointment>().HasMany(a => a.Favors).WithMany();
         builder.Entity<Appointment>().Property(e => e.PlacedAt).HasDefaultValue(DateTime.UtcNow);
+        builder.Entity<Appointment>().Property(e => e.At);
         
         builder.Entity<IdentityRole<int>>().HasData(
             new { Id = -1, Name = nameof(Barber), NormalizedName = nameof(Barber).ToUpper() },
