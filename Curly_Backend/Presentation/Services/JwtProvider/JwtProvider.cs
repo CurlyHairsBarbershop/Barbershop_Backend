@@ -32,8 +32,8 @@ public class JwtProvider<TUser> : IJwtProvider<TUser>
 
     private SigningCredentials GetSigningCredentials()
     {
-        var symmetricKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_signingKey));
-        var signingCredentials = new SigningCredentials(symmetricKey, SecurityAlgorithms.HmacSha512);
+        var symmetricKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_signingKey));
+        var signingCredentials = new SigningCredentials(symmetricKey, SecurityAlgorithms.HmacSha256Signature);
 
         return signingCredentials;
     }

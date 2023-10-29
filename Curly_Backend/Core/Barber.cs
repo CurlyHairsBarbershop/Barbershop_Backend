@@ -4,7 +4,7 @@ public class Barber : ApplicationUser
 {
     public decimal Earnings => Convert.ToDecimal(Appointments.SelectMany(a => a.Favors).Average(f => f.Cost));
     
-    public string Image { get; set; }
+    public string? Image { get; set; }
     
     public ICollection<Appointment> Appointments { get; set; }
     
