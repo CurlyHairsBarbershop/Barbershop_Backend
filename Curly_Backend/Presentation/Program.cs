@@ -89,6 +89,8 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+InitializeDatabase(app, builder);
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -107,7 +109,7 @@ app.MapControllers();
 app.Run();
 
 
-private static void InitializeDatabase(IApplicationBuilder app, WebApplicationBuilder builder)
+static void InitializeDatabase(IApplicationBuilder app, WebApplicationBuilder builder)
 {
     using var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope();
     var logger = LoggerFactory.Create(config =>
