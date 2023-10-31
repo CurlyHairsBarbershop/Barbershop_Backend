@@ -30,7 +30,7 @@ builder.Services
 
 var secret = builder.Configuration.GetSection("Jwt:Key").Value ?? throw new InvalidDataException("jwt key was not provided");
 var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secret));
-
+var issuer = builder.Configuration.GetSection("Jwt:ValidIssuer").Value;
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -42,24 +42,22 @@ builder.Services.AddAuthentication(options =>
     opt.TokenValidationParameters = new()
     {
         ValidateIssuer = true,
-        ValidateAudience = true,
+        ValidateAudience = false,
         ValidateIssuerSigningKey = true,
         ValidateLifetime = true,
         RequireExpirationTime = true,
-        ValidAudience = builder.Configuration.GetSection("Jwt:ValidAudience").Value,
-        ValidIssuer = builder.Configuration.GetSection("Jwt:ValidIssuer").Value,
+        //ValidAudience = builder.Configuration.GetSection("Jwt:ValidAudience").Value,
+        ValidIssuer = issuer,
         IssuerSigningKey = key
     };
 });
 
 builder.Services.TryAddScoped(typeof(IAuthService<>), typeof(AuthService<>));
 builder.Services.AddControllers();
-
-// builder.Configuration.GetSection("Jwt").Bind(new JwtProviderOptions());
 builder.Services.Configure<JwtProviderOptions>(opt =>
 {
     opt.Key = secret;
-    opt.ValidAudience = builder.Configuration.GetSection("Jwt:ValidIssuer").Value ?? throw new InvalidCastException("jwt issuer was not provided");
+    opt.ValidIssuer = builder.Configuration.GetSection("Jwt:ValidIssuer").Value ?? throw new InvalidCastException("jwt issuer was not provided");
     opt.ValidAudience =  builder.Configuration.GetSection("Jwt:ValidAudience").Value ?? throw new InvalidDataException("audience was not provided");
 });
 
@@ -71,7 +69,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         In = ParameterLocation.Header,
         Description = "Enter bearer token",
-        Name = "JwtAuthorization",
+        Name = "Authorization",
         Type = SecuritySchemeType.ApiKey
     });
 
@@ -97,7 +95,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 app.UseRouting();
 
@@ -118,6 +116,9 @@ static void InitializeDatabase(IApplicationBuilder app, WebApplicationBuilder bu
         config.AddConfiguration(builder.Configuration.GetSection("Logging"));
         
     }).CreateLogger("Program");
+    
+    logger.LogInformation("Automigrations started");
+    
     try
     {
         var pers = serviceScope.ServiceProvider.GetRequiredService<ApplicationContext>();

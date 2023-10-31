@@ -32,8 +32,8 @@ public class JwtProvider<TUser> : IJwtProvider<TUser>
 
     private SigningCredentials GetSigningCredentials()
     {
-        var symmetricKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_signingKey));
-        var signingCredentials = new SigningCredentials(symmetricKey, SecurityAlgorithms.HmacSha256Signature);
+        var symmetricKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_signingKey));
+        var signingCredentials = new SigningCredentials(symmetricKey, SecurityAlgorithms.HmacSha512Signature);
 
         return signingCredentials;
     }
@@ -46,7 +46,7 @@ public class JwtProvider<TUser> : IJwtProvider<TUser>
             claims: claims,
             expires: DateTime.Now.AddHours(1),
             issuer: _issuer,
-            audience: _audience,
+            // audience: _audience,
             signingCredentials: credentials);
 
         return securityToken;

@@ -1,7 +1,9 @@
 using Core;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Presentation.Models.Auth.Barber;
+using Presentation.Models.Auth.Login;
 using Presentation.Models.Options;
 using Presentation.Services.JwtProvider;
 
@@ -22,14 +24,14 @@ public class AuthService<TUser> : IAuthService<TUser> where TUser : ApplicationU
 
     public async Task<(SignInResult Result, string? Token)> Register(RegisterModel registerModel)
     {
-        var barberExits = _userManager.Users.Any(b => registerModel.Email == b.Email);
+        var userExists = _userManager.Users.Any(b => registerModel.Email == b.Email);
 
-        if (barberExits)
+        if (userExists)
         {
             return (SignInResult.Failed, null);
         }
 
-        var newBarber = new TUser
+        var newUser = new TUser
         {
             Email = registerModel.Email,
             UserName = registerModel.Email,
@@ -37,11 +39,11 @@ public class AuthService<TUser> : IAuthService<TUser> where TUser : ApplicationU
             LastName = registerModel.LastName
         };
         
-        var result = await _userManager.CreateAsync(newBarber);
+        var result = await _userManager.CreateAsync(newUser);
 
         if (result.Succeeded)
         {
-            var user = await _userManager.FindByEmailAsync(newBarber.Email);
+            var user = await _userManager.FindByEmailAsync(newUser.Email);
             var role = typeof(TUser).Name;
             
             await _userManager.AddToRoleAsync(user, role);
@@ -53,5 +55,21 @@ public class AuthService<TUser> : IAuthService<TUser> where TUser : ApplicationU
         }
 
         return (SignInResult.Failed, null);
+    }
+    
+    public async Task<(SignInResult Result, string? Token)> Login(LoginModel loginModel)
+    {
+        var userExists = await _userManager.Users.AnyAsync(u => loginModel.Email == u.Email);
+
+        if (!userExists)
+        {
+            return (SignInResult.Failed, null);
+        }
+
+        var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Email == loginModel.Email);
+        var role = typeof(TUser).Name;
+        var token = new JwtProvider<TUser>(_options.Value).GenerateJwtTokenString(user, role);
+
+        return (SignInResult.Success, token);
     }
 }

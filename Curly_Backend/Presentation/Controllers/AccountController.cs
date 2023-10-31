@@ -1,25 +1,26 @@
 using Core;
 using Microsoft.AspNetCore.Mvc;
 using Presentation.Models.Auth.Barber;
+using Presentation.Models.Auth.Login;
 using Presentation.Services.AuthService;
 
 namespace Presentation.Controllers;
 
-[Route("account/barber")]
+[Route("account")]
 [ApiController]
 public class AccountController : ControllerBase
 {
-    private readonly IAuthService<Barber> _barberAuthService;
+    private readonly IAuthService<Client> _clientAuthService;
     
-    public AccountController(IAuthService<Barber> barberAuthService)
+    public AccountController(IAuthService<Client> clientAuthService)
     {
-        _barberAuthService = barberAuthService;
+        _clientAuthService = clientAuthService;
     }
     
     [HttpPost("")]
-    public async Task<IActionResult> RegisterBarber([FromBody] RegisterModel registerModel)
+    public async Task<IActionResult> Register([FromBody] RegisterModel registerModel)
     {
-        var authResponse = await _barberAuthService.Register(registerModel);
+        var authResponse = await _clientAuthService.Register(registerModel);
 
         if (authResponse.Result.Succeeded)
         {
@@ -29,6 +30,22 @@ public class AccountController : ControllerBase
             });
         }
 
-        return StatusCode(StatusCodes.Status500InternalServerError, "could not register barber");
+        return StatusCode(StatusCodes.Status500InternalServerError, "could not register client");
+    }
+
+    [HttpGet("")]
+    public async Task<IActionResult> Login(LoginModel loginModel)
+    {
+        var loginResponse = await _clientAuthService.Login(loginModel);
+
+        if (loginResponse.Result.Succeeded)
+        {
+            return Accepted(new
+            {
+                token = loginResponse.Token
+            });
+        }
+        
+        return StatusCode(StatusCodes.Status500InternalServerError, "could not login client");
     }
 }
