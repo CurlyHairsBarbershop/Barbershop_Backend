@@ -11,6 +11,7 @@ using Presentation.Models.Options;
 using Presentation.Services.AuthService;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddCors();
 // Add services to the container.
 builder.Services.AddDbContext<ApplicationContext>(opt =>
 {
@@ -95,7 +96,12 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
-
+app.UseCors(build => build
+    .AllowAnyHeader()
+    .AllowAnyMethod()
+    .SetIsOriginAllowed((host) => true)
+    .AllowCredentials()
+);
 InitializeDatabase(app, builder);
 
 // Configure the HTTP request pipeline.
