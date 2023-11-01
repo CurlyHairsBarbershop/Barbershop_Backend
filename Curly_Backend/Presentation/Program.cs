@@ -12,6 +12,7 @@ using Presentation.Models.Options;
 using Presentation.Services.AuthService;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddCors();
 // Add services to the container.
 builder.Services.AddCors();
 builder.Services.AddDbContext<ApplicationContext>(opt =>
