@@ -1,11 +1,9 @@
-using System.Security.Claims;
 using Core;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Presentation.Models.Auth.Barber;
-using Presentation.Models.Auth.Login;
+using Presentation.Models.Auth;
 using Presentation.Services.AuthService;
 
 namespace Presentation.Controllers;
@@ -30,49 +28,47 @@ public class AccountController : ControllerBase
     }
     
     [AllowAnonymous]
-    [Route("")]
+    [Route("register")]
     [HttpPost]
     public async Task<IActionResult> Register([FromBody] RegisterModel registerModel)
     {
+        if (registerModel.Password != registerModel.ConfirmPassword)
+        {
+            return BadRequest("password and confirm password do not match");
+        }
+        
         var authResponse = await _clientAuthService.Register(registerModel);
 
-        if (authResponse.Result.Succeeded)
+        if (authResponse.Result.Succeeded == false)
         {
-            _logger.LogInformation("{Role} {Email} has registered successfully", nameof(Client), registerModel.Email);
-           
-            return Created("/unsupported", new
-            {
-                token = authResponse.Token
-            });
+            return BadRequest(authResponse.Error);
         }
-
-        _logger.LogError("{Role} {Email} could not register", nameof(Client), registerModel.Email);
         
-        return StatusCode(StatusCodes.Status500InternalServerError, "could not register client");
+        return Created("/unsupported", new
+        {
+            token = authResponse.Token
+        });
     }
 
     [AllowAnonymous]
-    [Route("")]
-    [HttpGet]
+    [Route("login")]
+    [HttpPost]
     public async Task<IActionResult> Login(LoginModel loginModel)
     {
         var loginResponse = await _clientAuthService.Login(loginModel);
 
-        if (loginResponse.Result.Succeeded)
+        if (loginResponse.Result.Succeeded == false)
         {
-            _logger.LogInformation("{Role} {Email} has logged in successfully", nameof(Client), loginModel.Email);
-            return Accepted(new
-            {
-                token = loginResponse.Token
-            });
+            return BadRequest(loginResponse.Error);
         }
         
-        _logger.LogInformation("{Role} {Email} could not log in", nameof(Client), loginModel.Email);
-        
-        return StatusCode(StatusCodes.Status500InternalServerError, "could not login client");
+        return Accepted(new
+        {
+            token = loginResponse.Token
+        });
     }
 
-    [Route("my")]
+    [Route("")]
     [HttpGet]
     public async Task<IActionResult> My()
     {

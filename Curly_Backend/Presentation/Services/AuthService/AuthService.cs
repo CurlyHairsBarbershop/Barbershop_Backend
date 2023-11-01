@@ -2,8 +2,7 @@ using Core;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Presentation.Models.Auth.Barber;
-using Presentation.Models.Auth.Login;
+using Presentation.Models.Auth;
 using Presentation.Models.Options;
 using Presentation.Services.JwtProvider;
 
@@ -13,22 +12,28 @@ public class AuthService<TUser> : IAuthService<TUser> where TUser : ApplicationU
 {
     private readonly UserManager<TUser> _userManager;
     private readonly IOptions<JwtProviderOptions> _options;
+    private readonly ILogger<AuthService<TUser>> _logger;
     
     public AuthService(
         UserManager<TUser> userManager, 
-        IOptions<JwtProviderOptions> options)
+        IOptions<JwtProviderOptions> options, 
+        ILogger<AuthService<TUser>> logger)
     {
         _userManager = userManager;
         _options = options;
+        _logger = logger;
     }
 
-    public async Task<(SignInResult Result, string? Token)> Register(RegisterModel registerModel)
+    public async Task<(SignInResult Result, string? Token, string? Error)> Register(RegisterModel registerModel)
     {
         var userExists = _userManager.Users.Any(b => registerModel.Email == b.Email);
 
         if (userExists)
         {
-            return (SignInResult.Failed, null);
+            _logger.LogWarning(
+                "Could not register {Role} {Email}: already exists", 
+                typeof(TUser).Name, registerModel.Email);
+            return (SignInResult.NotAllowed, null, "member already exists");
         }
 
         var newUser = new TUser
@@ -36,10 +41,10 @@ public class AuthService<TUser> : IAuthService<TUser> where TUser : ApplicationU
             Email = registerModel.Email,
             UserName = registerModel.Email,
             FirstName = registerModel.Name,
-            LastName = registerModel.LastName
+            LastName = registerModel.LastName,
         };
         
-        var result = await _userManager.CreateAsync(newUser);
+        var result = await _userManager.CreateAsync(newUser, registerModel.Password);
 
         if (result.Succeeded)
         {
@@ -51,25 +56,38 @@ public class AuthService<TUser> : IAuthService<TUser> where TUser : ApplicationU
             var token = new JwtProvider<TUser>(_options.Value)
                 .GenerateJwtTokenString(user, role);
             
-            return (SignInResult.Success, token);
+            _logger.LogInformation("{Role} {Email} has registered successfully", role, registerModel.Email);
+            
+            return (SignInResult.Success, token, null);
         }
 
-        return (SignInResult.Failed, null);
+        return (SignInResult.Failed, null, result.Errors.FirstOrDefault()?.Description);
     }
     
-    public async Task<(SignInResult Result, string? Token)> Login(LoginModel loginModel)
+    public async Task<(SignInResult Result, string? Token, string? Error)> Login(LoginModel loginModel)
     {
-        var userExists = await _userManager.Users.AnyAsync(u => loginModel.Email == u.Email);
-
-        if (!userExists)
+        var user = await _userManager.FindByEmailAsync(loginModel.Email);
+        
+        var role = typeof(TUser).Name;
+        
+        if (user is null)
         {
-            return (SignInResult.Failed, null);
+            _logger.LogWarning("{Role} {Email} invalid login email", role, loginModel.Email);
+            return (SignInResult.Failed, null, "invalid email");
         }
 
-        var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Email == loginModel.Email);
-        var role = typeof(TUser).Name;
+        var passwordValid = await _userManager.CheckPasswordAsync(user, loginModel.Password);
+
+        if (!passwordValid)
+        {
+            _logger.LogWarning("{Role} {Email} invalid login password", role, loginModel.Email);
+            return (SignInResult.NotAllowed, null, "invalid password");
+        }
+        
         var token = new JwtProvider<TUser>(_options.Value).GenerateJwtTokenString(user, role);
 
-        return (SignInResult.Success, token);
+        _logger.LogInformation("{Role} {Email} has logged in successfully", role, loginModel.Email);
+        
+        return (SignInResult.Success, token, null);
     }
 }

@@ -54,6 +54,14 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.TryAddScoped(typeof(IAuthService<>), typeof(AuthService<>));
 builder.Services.AddControllers();
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireUppercase = false;
+});
 builder.Services.Configure<JwtProviderOptions>(opt =>
 {
     opt.Key = secret;

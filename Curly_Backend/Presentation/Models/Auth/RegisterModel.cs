@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
 
-namespace Presentation.Models.Auth.Barber;
+namespace Presentation.Models.Auth;
 
 public class RegisterModel
 {
@@ -21,10 +21,6 @@ public class RegisterModel
     public required string Name { get; init; }
     
     public required string LastName { get; init; }
-    
-    //public required string Gender { get; set; }
-    
-    //public required int Experience { get; set; }
     
     [JsonIgnore]
     [PasswordPropertyText]
