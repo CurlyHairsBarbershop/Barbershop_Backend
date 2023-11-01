@@ -50,6 +50,36 @@ public class ApplicationContext : IdentityDbContext<ApplicationUser, IdentityRol
             new { Id = -1, Name = nameof(Barber), NormalizedName = nameof(Barber).ToUpper() },
             new { Id = -2, Name = nameof(Client), NormalizedName = nameof(Client).ToUpper() },
             new { Id = -3, Name = nameof(Admin), NormalizedName = nameof(Admin).ToUpper() });
+
+        var mykhailoBarber = new Barber
+        {
+            Id = -4, 
+            FirstName = "Mykhailo", LastName = "Tkachenko", 
+            Email = "20werasdf@gmail.com",
+            PhoneNumber = "0970790944"
+        };
+
+        // var reviews = new List<Review>
+        // {
+        //     new()
+        //     {
+        //         Id = -1, Rating = 5, Content = "Super Barber!!!", Barber = mykhailoBarber
+        //     },
+        //     new()
+        //     {
+        //         Id = -2, Rating = 5, Content = "One of the best barbers in the world", Barber = mykhailoBarber
+        //     },
+        //     new()
+        //     {
+        //         Id = -3, Rating = 4, Content = "Really cool barber, will come again", Barber = mykhailoBarber
+        //     }
+        // };
+        
+        builder.Entity<Barber>().HasData(
+            new Barber { Id = -1, FirstName = "John", LastName = "Johnson", Email = "johnjj@gmail.com", PhoneNumber = "927804723" },
+            new Barber { Id = -2, FirstName = "Alex", LastName = "Thompson", Email = "alext@gmail.com", PhoneNumber = "9478920606" },
+            new Barber { Id = -3, FirstName = "Maksym", LastName = "Bobryk", Email = "maxbobryk@gmail.com", PhoneNumber = "48934909434" },
+            new Barber { Id = -4, FirstName = "Mykhailo", LastName = "Tkachenko", Email = "20werasdf@gmail.com", PhoneNumber = "0970790944" });
         
         base.OnModelCreating(builder);
     }

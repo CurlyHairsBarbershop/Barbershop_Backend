@@ -3,6 +3,7 @@ using System;
 using DAL.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DAL.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20231101221545_Barbers_preinit")]
+    partial class Barbers_preinit
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -34,7 +37,7 @@ namespace DAL.Migrations
 
                     b.HasIndex("FavorsId");
 
-                    b.ToTable("AppointmentFavor", (string)null);
+                    b.ToTable("AppointmentFavor");
                 });
 
             modelBuilder.Entity("Core.ApplicationUser", b =>
@@ -142,7 +145,7 @@ namespace DAL.Migrations
 
                     b.HasIndex("ClientId");
 
-                    b.ToTable("Appointments", (string)null);
+                    b.ToTable("Appointments");
                 });
 
             modelBuilder.Entity("Core.Favor", b =>
@@ -166,7 +169,7 @@ namespace DAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Favors", (string)null);
+                    b.ToTable("Favors");
                 });
 
             modelBuilder.Entity("Core.Review", b =>
@@ -200,7 +203,7 @@ namespace DAL.Migrations
 
                     b.HasIndex("PublisherId");
 
-                    b.ToTable("Reviews", (string)null);
+                    b.ToTable("Reviews");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
@@ -363,7 +366,7 @@ namespace DAL.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.ToTable("Admins", (string)null);
+                    b.ToTable("Admins");
                 });
 
             modelBuilder.Entity("Core.Barber", b =>
@@ -373,7 +376,7 @@ namespace DAL.Migrations
                     b.Property<string>("Image")
                         .HasColumnType("text");
 
-                    b.ToTable("Barbers", (string)null);
+                    b.ToTable("Barbers");
 
                     b.HasData(
                         new
@@ -438,7 +441,7 @@ namespace DAL.Migrations
                 {
                     b.HasBaseType("Core.ApplicationUser");
 
-                    b.ToTable("Clients", (string)null);
+                    b.ToTable("Clients");
                 });
 
             modelBuilder.Entity("AppointmentFavor", b =>

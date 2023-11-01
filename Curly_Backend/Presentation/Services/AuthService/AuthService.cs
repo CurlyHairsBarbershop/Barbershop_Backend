@@ -1,6 +1,5 @@
 using Core;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Presentation.Models.Auth;
 using Presentation.Models.Options;

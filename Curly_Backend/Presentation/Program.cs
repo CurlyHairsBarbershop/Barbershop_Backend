@@ -1,6 +1,7 @@
 using System.Text;
 using Core;
 using DAL.Context;
+using Infrustructure.Extensions.DI.UserServices;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,7 @@ using Presentation.Services.AuthService;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
+builder.Services.AddCors();
 builder.Services.AddDbContext<ApplicationContext>(opt =>
 {
     opt.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSql"));
@@ -53,6 +55,7 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.TryAddScoped(typeof(IAuthService<>), typeof(AuthService<>));
+builder.Services.AddUserReaders();
 builder.Services.AddControllers();
 builder.Services.Configure<IdentityOptions>(options =>
 {
@@ -95,7 +98,12 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
-
+app.UseCors(build => build
+    .AllowAnyHeader()
+    .AllowAnyMethod()
+    .SetIsOriginAllowed(_ => true)
+    .AllowCredentials()
+);
 InitializeDatabase(app, builder);
 
 // Configure the HTTP request pipeline.
