@@ -6,6 +6,8 @@ public class Review
     
     public int Rating { get; set; }
     
+    public int? ReplyTo { get; set; }
+    
     public string Title { get; set; }
     
     public string Content { get; set; }

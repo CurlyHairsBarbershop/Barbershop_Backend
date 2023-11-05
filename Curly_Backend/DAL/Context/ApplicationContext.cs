@@ -50,14 +50,7 @@ public class ApplicationContext : IdentityDbContext<ApplicationUser, IdentityRol
             new { Id = -1, Name = nameof(Barber), NormalizedName = nameof(Barber).ToUpper() },
             new { Id = -2, Name = nameof(Client), NormalizedName = nameof(Client).ToUpper() },
             new { Id = -3, Name = nameof(Admin), NormalizedName = nameof(Admin).ToUpper() });
-
-        var mykhailoBarber = new Barber
-        {
-            Id = -4, 
-            FirstName = "Mykhailo", LastName = "Tkachenko", 
-            Email = "20werasdf@gmail.com",
-            PhoneNumber = "0970790944"
-        };
+        
 
         // var reviews = new List<Review>
         // {

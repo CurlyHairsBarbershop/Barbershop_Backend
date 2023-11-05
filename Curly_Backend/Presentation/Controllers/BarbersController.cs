@@ -39,9 +39,10 @@ public class BarbersController : ControllerBase
                 title: commmentary.Title,
                 content: commmentary.Content,
                 rating: commmentary.Rating);
-            
-            _logger.LogInformation("{Role} {Email} posted a commentary to barber {BarberEmail}", nameof(Client), memberEmail, commmentary.BarberEmail);
-            
+
+            _logger.LogInformation("{Role} {Email} posted a commentary to barber {BarberEmail}", nameof(Client),
+                memberEmail, commmentary.BarberEmail);
+
             return Accepted(new
             {
                 barber.Email,
@@ -51,12 +52,33 @@ public class BarbersController : ControllerBase
                 barber.Earnings,
                 barber.Rating,
                 barber.Image,
-                Reviews = barber.Reviews?.Select(r => new
-                {
-                    r.Content,
-                    r.Rating,
-                    Publisher = new { r.Publisher.FirstName, r.Publisher.LastName, r.Publisher.Email }
-                })
+                Reviews = barber.Reviews?
+                    .GroupBy(r => r.Barber.Email)
+                    .SelectMany(g =>
+                        g.Select(r => new
+                        {
+                            r.Title,
+                            r.Content,
+                            r.Rating,
+                            Publisher = new
+                            {
+                                Name = r.Publisher.FirstName,
+                                r.Publisher.LastName,
+                                r.Publisher.Email
+                            },
+                            Replies = g.Where(reply => reply.ReplyTo == r.Id)
+                                .Select(reply => new
+                                {
+                                    reply.Title,
+                                    reply.Content,
+                                    Publisher = new
+                                    {
+                                        Name = reply.Publisher.FirstName,
+                                        r.Publisher.LastName,
+                                        r.Publisher.Email
+                                    }
+                                })
+                        }))
             });
         }
         catch (InvalidDataException ex)
@@ -82,18 +104,39 @@ public class BarbersController : ControllerBase
         return Ok(barbers.Select(b => new
         {
             b.Email,
-            b.FirstName,
+            Name = b.FirstName,
             b.LastName,
             b.PhoneNumber,
             b.Earnings,
             b.Rating,
             b.Image,
-            Reviews = b.Reviews?.Select(r => new
-            {
-                r.Content,
-                r.Rating,
-                Publisher = new { r.Publisher.FirstName, r.Publisher.LastName, r.Publisher.Email }
-            })
+            Reviews = b.Reviews?
+                .GroupBy(r => r.Barber.Email)
+                .SelectMany(g =>
+                    g.Select(r => new
+                    {
+                        r.Title,
+                        r.Content,
+                        r.Rating,
+                        Publisher = new
+                        {
+                            Name = r.Publisher.FirstName,
+                            r.Publisher.LastName,
+                            r.Publisher.Email
+                        },
+                        Replies = g.Where(reply => reply.ReplyTo == r.Id)
+                            .Select(reply => new
+                            {
+                                reply.Title,
+                                reply.Content,
+                                Publisher = new
+                                {
+                                    Name = reply.Publisher.FirstName,
+                                    r.Publisher.LastName,
+                                    r.Publisher.Email
+                                }
+                            })
+                    }))
         }));
     }
     
@@ -115,18 +158,46 @@ public class BarbersController : ControllerBase
         return Ok(barbers.Select(b => new
         {
             b.Email,
-            b.FirstName,
+            Name = b.FirstName,
             b.LastName,
             b.PhoneNumber,
             b.Earnings,
             b.Rating,
             b.Image,
-            Reviews = b.Reviews?.Select(r => new
-            {
-                r.Content,
-                r.Rating,
-                Publisher = new { r.Publisher.FirstName, r.Publisher.LastName, r.Publisher.Email }
-            })
+            Reviews = b.Reviews?
+                .GroupBy(r => r.Barber.Email)
+                .SelectMany(g =>
+                    g.Select(r => new
+                    {
+                        r.Title,
+                        r.Content,
+                        r.Rating,
+                        Publisher = new
+                        {
+                            Name = r.Publisher.FirstName,
+                            r.Publisher.LastName,
+                            r.Publisher.Email
+                        },
+                        Replies = GetReplies(r, g)
+                    }))
         }));
+    }
+
+    private dynamic GetReplies(Review review, IGrouping<string?, Review> g)
+    {
+        return
+            g.Where(reply => reply.ReplyTo == review.Id)
+                .Select(reply => new
+                {
+                    reply.Title,
+                    reply.Content,
+                    Publisher = new
+                    {
+                        Name = reply.Publisher.FirstName,
+                        reply.Publisher.LastName,
+                        reply.Publisher.Email
+                    },
+                    Replies = GetReplies(reply, g)
+                });
     }
 }
