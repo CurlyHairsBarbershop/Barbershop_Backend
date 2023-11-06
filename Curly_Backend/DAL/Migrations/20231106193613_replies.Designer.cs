@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DAL.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    [Migration("20231105170636_replies")]
+    [Migration("20231106193613_replies")]
     partial class replies
     {
         /// <inheritdoc />
@@ -137,7 +137,7 @@ namespace DAL.Migrations
                     b.Property<DateTime>("PlacedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasDefaultValue(new DateTime(2023, 11, 5, 17, 6, 36, 836, DateTimeKind.Utc).AddTicks(1290));
+                        .HasDefaultValue(new DateTime(2023, 11, 6, 19, 36, 13, 738, DateTimeKind.Utc).AddTicks(6800));
 
                     b.HasKey("Id");
 
@@ -386,7 +386,7 @@ namespace DAL.Migrations
                         {
                             Id = -1,
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "2d24168d-5711-41ed-9a21-72d45bc4a34f",
+                            ConcurrencyStamp = "33b83c1e-3a58-470c-9b34-66184ff0956b",
                             Email = "johnjj@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "John",
@@ -400,7 +400,7 @@ namespace DAL.Migrations
                         {
                             Id = -2,
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "45c3ebdb-6f61-449b-a44f-a8ea7f2570d3",
+                            ConcurrencyStamp = "1897e13c-6b94-4a02-a12c-f5bbac92b0c1",
                             Email = "alext@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Alex",
@@ -414,7 +414,7 @@ namespace DAL.Migrations
                         {
                             Id = -3,
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "b47852a1-ea9c-4272-b961-082439876168",
+                            ConcurrencyStamp = "abccfc05-ae46-45a2-980f-fb582a36a765",
                             Email = "maxbobryk@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Maksym",
@@ -428,7 +428,7 @@ namespace DAL.Migrations
                         {
                             Id = -4,
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "bc1ad83a-205e-4895-b13e-59774176c2ec",
+                            ConcurrencyStamp = "46323c1d-4ec1-4a06-a4d2-a4e4eac9cc3e",
                             Email = "20werasdf@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Mykhailo",

@@ -1,10 +1,16 @@
+using BLL.Services.Reviews;
 using BLL.Services.Users;
 using Core;
+using Infrustructure.DTOs;
+using Infrustructure.DTOs.Barbers;
+using Infrustructure.Extensions.Barbers;
+using Infrustructure.Extensions.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Presentation.Models.Barbers;
 using Presentation.Models.PageHandling;
+using Exception = System.Exception;
 
 namespace Presentation.Controllers;
 
@@ -12,17 +18,19 @@ namespace Presentation.Controllers;
 public class BarbersController : ControllerBase
 {
     private readonly IUserReader<Barber> _barberReader;
+    private readonly ReviewService _reviewService;
     private readonly BarberService _barberService;
     private readonly ILogger<BarbersController> _logger;
-    
+
     public BarbersController(
-        IUserReader<Barber> barberReader, 
-        BarberService barberService, 
-        ILogger<BarbersController> logger)
+        IUserReader<Barber> barberReader,
+        BarberService barberService,
+        ILogger<BarbersController> logger, ReviewService reviewService)
     {
         _barberReader = barberReader;
         _barberService = barberService;
         _logger = logger;
+        _reviewService = reviewService;
     }
 
     [HttpPost]
@@ -43,50 +51,15 @@ public class BarbersController : ControllerBase
             _logger.LogInformation("{Role} {Email} posted a commentary to barber {BarberEmail}", nameof(Client),
                 memberEmail, commmentary.BarberEmail);
 
-            return Accepted(new
-            {
-                barber.Email,
-                barber.FirstName,
-                barber.LastName,
-                barber.PhoneNumber,
-                barber.Earnings,
-                barber.Rating,
-                barber.Image,
-                Reviews = barber.Reviews?
-                    .GroupBy(r => r.Barber.Email)
-                    .SelectMany(g =>
-                        g.Select(r => new
-                        {
-                            r.Title,
-                            r.Content,
-                            r.Rating,
-                            Publisher = new
-                            {
-                                Name = r.Publisher.FirstName,
-                                r.Publisher.LastName,
-                                r.Publisher.Email
-                            },
-                            Replies = g.Where(reply => reply.ReplyTo == r.Id)
-                                .Select(reply => new
-                                {
-                                    reply.Title,
-                                    reply.Content,
-                                    Publisher = new
-                                    {
-                                        Name = reply.Publisher.FirstName,
-                                        r.Publisher.LastName,
-                                        r.Publisher.Email
-                                    }
-                                })
-                        }))
-            });
+            return Ok(barber.ToBarberWithReviewsDto(
+                barber.Reviews?.ToList() ?? new()));
         }
         catch (InvalidDataException ex)
         {
             return BadRequest(ex.Message);
         }
     }
-    
+
     [HttpGet]
     [Route("page")]
     public async Task<IActionResult> GetPaged([FromQuery] QueryPageModel pageReader)
@@ -100,46 +73,32 @@ public class BarbersController : ControllerBase
         {
             return NoContent();
         }
-        
-        return Ok(barbers.Select(b => new
-        {
-            b.Email,
-            Name = b.FirstName,
-            b.LastName,
-            b.PhoneNumber,
-            b.Earnings,
-            b.Rating,
-            b.Image,
-            Reviews = b.Reviews?
-                .GroupBy(r => r.Barber.Email)
-                .SelectMany(g =>
-                    g.Select(r => new
-                    {
-                        r.Title,
-                        r.Content,
-                        r.Rating,
-                        Publisher = new
-                        {
-                            Name = r.Publisher.FirstName,
-                            r.Publisher.LastName,
-                            r.Publisher.Email
-                        },
-                        Replies = g.Where(reply => reply.ReplyTo == r.Id)
-                            .Select(reply => new
-                            {
-                                reply.Title,
-                                reply.Content,
-                                Publisher = new
-                                {
-                                    Name = reply.Publisher.FirstName,
-                                    r.Publisher.LastName,
-                                    r.Publisher.Email
-                                }
-                            })
-                    }))
-        }));
+
+        return Ok(barbers.Select(b => 
+            b.ToBarberWithReviewsDto(b.Reviews?.ToList() ?? new())));
     }
-    
+
+    [HttpPost]
+    [Route("reply")]
+    [Authorize(Roles = nameof(Client))]
+    public async Task<IActionResult> PostReply([FromBody] PostReplyModel replyModel)
+    {
+        try
+        {
+            var review = await _barberService.PostReplyTo(
+                parentId: replyModel.ReviewId,
+                content: replyModel.Content,
+                clientEmail: Request.HttpContext.User.Claims
+                    .FirstOrDefault(c => c.Type == "Email")?.Value ?? string.Empty);
+            return Accepted();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "{Message}", ex.Message);
+            return BadRequest(ex.Message);
+        }
+    }
+
     [HttpGet]
     [Route("")]
     public async Task<IActionResult> Get()
@@ -155,49 +114,8 @@ public class BarbersController : ControllerBase
             return NoContent();
         }
 
-        return Ok(barbers.Select(b => new
-        {
-            b.Email,
-            Name = b.FirstName,
-            b.LastName,
-            b.PhoneNumber,
-            b.Earnings,
-            b.Rating,
-            b.Image,
-            Reviews = b.Reviews?
-                .GroupBy(r => r.Barber.Email)
-                .SelectMany(g =>
-                    g.Select(r => new
-                    {
-                        r.Title,
-                        r.Content,
-                        r.Rating,
-                        Publisher = new
-                        {
-                            Name = r.Publisher.FirstName,
-                            r.Publisher.LastName,
-                            r.Publisher.Email
-                        },
-                        Replies = GetReplies(r, g)
-                    }))
-        }));
+        return Ok(barbers.Select(b => 
+            b.ToBarberWithReviewsDto(b.Reviews?.ToList() ?? new())));
     }
-
-    private dynamic GetReplies(Review review, IGrouping<string?, Review> g)
-    {
-        return
-            g.Where(reply => reply.ReplyTo == review.Id)
-                .Select(reply => new
-                {
-                    reply.Title,
-                    reply.Content,
-                    Publisher = new
-                    {
-                        Name = reply.Publisher.FirstName,
-                        reply.Publisher.LastName,
-                        reply.Publisher.Email
-                    },
-                    Replies = GetReplies(reply, g)
-                });
-    }
+    
 }

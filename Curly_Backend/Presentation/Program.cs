@@ -1,4 +1,5 @@
 using System.Text;
+using BLL.Services.Reviews;
 using Core;
 using DAL.Context;
 using Infrustructure.Extensions.DI.UserServices;
@@ -56,6 +57,7 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.TryAddScoped(typeof(IAuthService<>), typeof(AuthService<>));
+builder.Services.TryAddScoped<ReviewService>();
 builder.Services.AddUserReaders();
 builder.Services.AddControllers();
 builder.Services.Configure<IdentityOptions>(options =>

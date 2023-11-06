@@ -51,22 +51,6 @@ public class ApplicationContext : IdentityDbContext<ApplicationUser, IdentityRol
             new { Id = -2, Name = nameof(Client), NormalizedName = nameof(Client).ToUpper() },
             new { Id = -3, Name = nameof(Admin), NormalizedName = nameof(Admin).ToUpper() });
         
-
-        // var reviews = new List<Review>
-        // {
-        //     new()
-        //     {
-        //         Id = -1, Rating = 5, Content = "Super Barber!!!", Barber = mykhailoBarber
-        //     },
-        //     new()
-        //     {
-        //         Id = -2, Rating = 5, Content = "One of the best barbers in the world", Barber = mykhailoBarber
-        //     },
-        //     new()
-        //     {
-        //         Id = -3, Rating = 4, Content = "Really cool barber, will come again", Barber = mykhailoBarber
-        //     }
-        // };
         
         builder.Entity<Barber>().HasData(
             new Barber { Id = -1, FirstName = "John", LastName = "Johnson", Email = "johnjj@gmail.com", PhoneNumber = "927804723" },

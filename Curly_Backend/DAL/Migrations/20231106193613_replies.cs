@@ -22,7 +22,7 @@ namespace DAL.Migrations
                 table: "Appointments",
                 type: "timestamp with time zone",
                 nullable: false,
-                defaultValue: new DateTime(2023, 11, 5, 17, 6, 36, 836, DateTimeKind.Utc).AddTicks(1290),
+                defaultValue: new DateTime(2023, 11, 6, 19, 36, 13, 738, DateTimeKind.Utc).AddTicks(6800),
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone",
                 oldDefaultValue: new DateTime(2023, 11, 1, 22, 15, 45, 440, DateTimeKind.Utc).AddTicks(1800));
@@ -32,28 +32,28 @@ namespace DAL.Migrations
                 keyColumn: "Id",
                 keyValue: -4,
                 column: "ConcurrencyStamp",
-                value: "bc1ad83a-205e-4895-b13e-59774176c2ec");
+                value: "46323c1d-4ec1-4a06-a4d2-a4e4eac9cc3e");
 
             migrationBuilder.UpdateData(
                 table: "AspNetUsers",
                 keyColumn: "Id",
                 keyValue: -3,
                 column: "ConcurrencyStamp",
-                value: "b47852a1-ea9c-4272-b961-082439876168");
+                value: "abccfc05-ae46-45a2-980f-fb582a36a765");
 
             migrationBuilder.UpdateData(
                 table: "AspNetUsers",
                 keyColumn: "Id",
                 keyValue: -2,
                 column: "ConcurrencyStamp",
-                value: "45c3ebdb-6f61-449b-a44f-a8ea7f2570d3");
+                value: "1897e13c-6b94-4a02-a12c-f5bbac92b0c1");
 
             migrationBuilder.UpdateData(
                 table: "AspNetUsers",
                 keyColumn: "Id",
                 keyValue: -1,
                 column: "ConcurrencyStamp",
-                value: "2d24168d-5711-41ed-9a21-72d45bc4a34f");
+                value: "33b83c1e-3a58-470c-9b34-66184ff0956b");
         }
 
         /// <inheritdoc />
@@ -71,7 +71,7 @@ namespace DAL.Migrations
                 defaultValue: new DateTime(2023, 11, 1, 22, 15, 45, 440, DateTimeKind.Utc).AddTicks(1800),
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone",
-                oldDefaultValue: new DateTime(2023, 11, 5, 17, 6, 36, 836, DateTimeKind.Utc).AddTicks(1290));
+                oldDefaultValue: new DateTime(2023, 11, 6, 19, 36, 13, 738, DateTimeKind.Utc).AddTicks(6800));
 
             migrationBuilder.UpdateData(
                 table: "AspNetUsers",

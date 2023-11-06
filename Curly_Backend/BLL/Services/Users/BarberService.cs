@@ -12,6 +12,40 @@ public class BarberService
     {
         _dbContext = dbContext;
     }
+
+    public async Task<Review> PostReplyTo(string clientEmail, int parentId, string content)
+    {
+        var review = await _dbContext
+            .Reviews
+            .Include(r => r.Barber)
+            .FirstOrDefaultAsync(r => r.Id == parentId);
+        
+        var publisher = await _dbContext.Clients.FirstOrDefaultAsync(c => c.Email == clientEmail);
+
+        if (publisher is null)
+        {
+            throw new InvalidOperationException("publisher was invalid");
+        }
+        
+        if (review is null)
+        {
+            throw new InvalidDataException("parent was not found");
+        }
+
+        _dbContext.Reviews.Add(new Review
+        {
+            Content = content,
+            Rating = -1,
+            Title = "REPLY",
+            Publisher = publisher,
+            Barber = review.Barber,
+            ReplyTo = review.Id
+        });
+
+        await _dbContext.SaveChangesAsync();
+
+        return review;
+    }
     
     public async Task<Barber> AddComment(string barberEmail, string clientEmail, string title, string content, int rating)
     {
