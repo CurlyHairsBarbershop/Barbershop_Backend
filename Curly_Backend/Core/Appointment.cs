@@ -17,5 +17,7 @@ public class Appointment
     
     public Client Client { get; set; }
     
-    public ICollection<Favor> Favors { get; set; }
+    public ICollection<Favor>? Favors { get; set; }
+
+    public double TotalCost => Favors?.Select(f => f.Cost).DefaultIfEmpty(0).Sum() ?? 0.0;
 }

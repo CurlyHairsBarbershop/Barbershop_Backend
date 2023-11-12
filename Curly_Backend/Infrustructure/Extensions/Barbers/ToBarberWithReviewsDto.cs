@@ -7,10 +7,11 @@ namespace Infrustructure.Extensions.Barbers;
 
 public static partial class BarberExtensions
 {
-    public static BarberWithReviewsDTO ToBarberWithReviewsDto(this Barber b, List<Review> reviewSource)
+    public static BarberWithReviewsDTO ToBarberWithReviewsDto(this Barber b)
     {
         return new BarberWithReviewsDTO
         {
+            Id = b.Id,
             Email = b.Email ?? string.Empty,
             Name = b.FirstName,
             LastName = b.LastName,
@@ -22,6 +23,7 @@ public static partial class BarberExtensions
                 .Where(r => r.ReplyTo is null)
                 .Select(r => new ReviewDTO
                 {
+                    Id = r.Id,
                     Title = r.Title,
                     Content = r.Content,
                     Rating = r.Rating,
@@ -30,14 +32,14 @@ public static partial class BarberExtensions
                 }).ToList()
         };
     }
-    
+
     private static List<ReplyDTO> GetReplies(Review review, List<Review> allReviews)
     {
         return allReviews
-            .Where(r => r.ReplyTo is not null)
             .Where(r => r.ReplyTo == review.Id)
             .Select(reply => new ReplyDTO
             {
+                Id = reply.Id,
                 Content = reply.Content,
                 Publisher = reply.Publisher.ToPublisherDto(),
                 Replies = GetReplies(reply, allReviews)

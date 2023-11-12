@@ -1,4 +1,5 @@
 using System.Text;
+using BLL.Services.Appointments;
 using BLL.Services.Reviews;
 using Core;
 using DAL.Context;
@@ -58,6 +59,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.TryAddScoped(typeof(IAuthService<>), typeof(AuthService<>));
 builder.Services.TryAddScoped<ReviewService>();
+builder.Services.TryAddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddUserReaders();
 builder.Services.AddControllers();
 builder.Services.Configure<IdentityOptions>(options =>

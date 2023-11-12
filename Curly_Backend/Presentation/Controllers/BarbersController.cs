@@ -1,10 +1,6 @@
-using BLL.Services.Reviews;
 using BLL.Services.Users;
 using Core;
-using Infrustructure.DTOs;
-using Infrustructure.DTOs.Barbers;
 using Infrustructure.Extensions.Barbers;
-using Infrustructure.Extensions.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,19 +14,17 @@ namespace Presentation.Controllers;
 public class BarbersController : ControllerBase
 {
     private readonly IUserReader<Barber> _barberReader;
-    private readonly ReviewService _reviewService;
     private readonly BarberService _barberService;
     private readonly ILogger<BarbersController> _logger;
 
     public BarbersController(
         IUserReader<Barber> barberReader,
         BarberService barberService,
-        ILogger<BarbersController> logger, ReviewService reviewService)
+        ILogger<BarbersController> logger)
     {
         _barberReader = barberReader;
         _barberService = barberService;
         _logger = logger;
-        _reviewService = reviewService;
     }
 
     [HttpPost]
@@ -51,8 +45,7 @@ public class BarbersController : ControllerBase
             _logger.LogInformation("{Role} {Email} posted a commentary to barber {BarberEmail}", nameof(Client),
                 memberEmail, commmentary.BarberEmail);
 
-            return Ok(barber.ToBarberWithReviewsDto(
-                barber.Reviews?.ToList() ?? new()));
+            return Ok(barber.ToBarberWithReviewsDto());
         }
         catch (InvalidDataException ex)
         {
@@ -75,7 +68,7 @@ public class BarbersController : ControllerBase
         }
 
         return Ok(barbers.Select(b => 
-            b.ToBarberWithReviewsDto(b.Reviews?.ToList() ?? new())));
+            b.ToBarberWithReviewsDto()));
     }
 
     [HttpPost]
@@ -115,7 +108,6 @@ public class BarbersController : ControllerBase
         }
 
         return Ok(barbers.Select(b => 
-            b.ToBarberWithReviewsDto(b.Reviews?.ToList() ?? new())));
+            b.ToBarberWithReviewsDto()));
     }
-    
 }

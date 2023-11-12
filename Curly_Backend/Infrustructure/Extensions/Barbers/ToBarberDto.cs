@@ -9,11 +9,12 @@ public static partial class BarberExtensions
     {
         return new BarberDTO
         {
+            Id = b.Id,
             Email = b.Email ?? string.Empty,
             Name = b.FirstName,
             LastName = b.LastName,
             PhoneNumber = b.PhoneNumber ?? string.Empty,
-            Earnings = b.Earnings,
+            //Earnings = b.Earnings,
             Rating = b.Rating,
             ImageUrl = b.Image ?? string.Empty
         };
