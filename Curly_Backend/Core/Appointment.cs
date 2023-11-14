@@ -5,6 +5,7 @@ public class Appointment
     private DateTime _at;
     public int Id { get; set; }
 
+    //TODO: to local time set local in db also
     public DateTime At
     {
         get => _at.ToLocalTime(); 

@@ -14,12 +14,7 @@ public static partial class AppointmentExtensions
             Id = appointment.Id,
             At = appointment.At,
             Barber = appointment.Barber.ToBarberDto(),
-            Favors = appointment.Favors?.Select(f => new FavorDTO
-            {
-                Id = f.Id,
-                Name = f.Name,
-                Cost = f.Cost
-            }).ToList() ?? new()
+            Favors = appointment.Favors.ToList() ?? new()
         };
     }
 }

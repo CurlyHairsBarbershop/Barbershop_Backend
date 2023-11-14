@@ -18,6 +18,7 @@ public class BarberReader : IUserReader<Barber>
         return _dbContext.Barbers
             .Skip((pageNumber == 0 ? pageNumber : pageNumber - 1) * pageCount)
             .Take(pageCount)
+            .OrderBy(b => b.Id)
             .AsNoTracking();
     }
 }

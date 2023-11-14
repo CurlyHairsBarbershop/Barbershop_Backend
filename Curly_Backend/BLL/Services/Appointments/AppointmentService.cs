@@ -34,12 +34,22 @@ public class AppointmentService : IAppointmentService
 
     public async Task<Appointment> Create(int barberId, int clientId, DateTime at, params int[] serviceIds)
     {
-        var barber = await _dbContext.Barbers.FirstOrDefaultAsync() 
+        var barber = await _dbContext.Barbers
+                         .Include(barber => barber.Appointments)
+                         .FirstOrDefaultAsync(b => b.Id == barberId) 
                      ?? throw new InvalidOperationException($"barber with id {barberId} does not exist");
-        var client = await _dbContext.Clients.FirstOrDefaultAsync(c => c.Id == clientId) 
+        var client = await _dbContext.Clients
+                         .FirstOrDefaultAsync(c => c.Id == clientId) 
                      ?? throw new InvalidOperationException($"client with id {barberId} does not exist");
+        var favours = await _dbContext.Favors
+            .Where(f => serviceIds.Contains(f.Id)).ToListAsync();
 
-        var favours = await _dbContext.Favors.Where(f => serviceIds.Contains(f.Id)).ToListAsync();
+        if (barber.Appointments
+            .Where(a => a.At >= DateTime.Now)
+            .Any(a => at > a.At && at < a.At.AddHours(1)))
+        {
+            throw new InvalidOperationException("Appointment date and time is already taken");
+        }
 
         var appointment = new Appointment
         {

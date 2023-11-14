@@ -1,5 +1,7 @@
+using System.Collections.Immutable;
 using Core;
 using DAL.Context;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace BLL.Services.Users;
@@ -7,7 +9,7 @@ namespace BLL.Services.Users;
 public class BarberService
 {
     private readonly ApplicationContext _dbContext;
-    
+
     public BarberService(ApplicationContext dbContext)
     {
         _dbContext = dbContext;
@@ -19,14 +21,14 @@ public class BarberService
             .Reviews
             .Include(r => r.Barber)
             .FirstOrDefaultAsync(r => r.Id == parentId);
-        
+
         var publisher = await _dbContext.Clients.FirstOrDefaultAsync(c => c.Email == clientEmail);
 
         if (publisher is null)
         {
             throw new InvalidOperationException("publisher was invalid");
         }
-        
+
         if (review is null)
         {
             throw new InvalidDataException("parent was not found");
@@ -46,34 +48,60 @@ public class BarberService
 
         return review;
     }
-    
-    public async Task<Barber> AddComment(string barberEmail, string clientEmail, string title, string content, int rating)
+
+    public async Task<Barber> AddComment(string barberEmail, string clientEmail, string title, string content,
+        int rating)
     {
-       var barber = await _dbContext.Barbers.FirstOrDefaultAsync(b => b.Email == barberEmail);
-       
-       if (barber is null)
-       {
-           throw new InvalidDataException("barber email was invalid");
-       }
+        var barber = await _dbContext.Barbers.FirstOrDefaultAsync(b => b.Email == barberEmail);
 
-       var member = await _dbContext.Clients.FirstOrDefaultAsync(c => c.Email == clientEmail);
-       if (member is null)
-       {
-           throw new InvalidDataException("member email was invalid");
-       }
-       
-       barber.Reviews ??= new List<Review>();
-       barber.Reviews.Add(new Review
-       {
-           Rating = rating,
-           Title = title,
-           Content = content,
-           Publisher = member,
-           Barber = barber
-       });
+        if (barber is null)
+        {
+            throw new InvalidDataException("barber email was invalid");
+        }
 
-       await _dbContext.SaveChangesAsync();
+        var member = await _dbContext.Clients.FirstOrDefaultAsync(c => c.Email == clientEmail);
+        if (member is null)
+        {
+            throw new InvalidDataException("member email was invalid");
+        }
 
-       return barber;
+        barber.Reviews ??= new List<Review>();
+        barber.Reviews.Add(new Review
+        {
+            Rating = rating,
+            Title = title,
+            Content = content,
+            Publisher = member,
+            Barber = barber
+        });
+
+        await _dbContext.SaveChangesAsync();
+
+        return barber;
+    }
+
+    public async Task<ImmutableList<DateTime>> GetBusyHours(
+        int barberId,
+        int daysAhead)
+    {
+        var barber = await _dbContext.Barbers
+            .Include(barber => barber.Appointments)
+            .FirstOrDefaultAsync(b => b.Id == barberId);
+
+        if (barber is null)
+        {
+            throw new InvalidDataException($"Barber with id {barberId} does not exist");
+        }
+
+        var hoursGroups = barber.Appointments?
+            .GroupBy(a => a.At.Date);
+        var hours = hoursGroups.Where(day =>
+                day.Key >= DateTime.Now.Date &&
+                day.Any(appointment => appointment.At.AddHours(1) > DateTime.Now))
+            .Take(daysAhead)
+            .SelectMany(d => d.Select(v => v.At))
+            .ToImmutableList() ?? ImmutableList<DateTime>.Empty;
+
+        return hours;
     }
 }
