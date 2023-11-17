@@ -43,10 +43,14 @@ public class AppointmentService : IAppointmentService
                      ?? throw new InvalidOperationException($"client with id {barberId} does not exist");
         var favours = await _dbContext.Favors
             .Where(f => serviceIds.Contains(f.Id)).ToListAsync();
-
-        if (barber.Appointments
-            .Where(a => a.At >= DateTime.Now)
-            .Any(a => at > a.At && at < a.At.AddHours(1)))
+        
+        var timeTaken = (barber.Appointments ?? new List<Appointment>())
+            .Any(a => 
+                a.At >= DateTime.Now && 
+                at > a.At && 
+                at < a.At.AddHours(1));
+        
+        if (timeTaken)
         {
             throw new InvalidOperationException("Appointment date and time is already taken");
         }

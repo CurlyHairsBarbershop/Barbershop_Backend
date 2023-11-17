@@ -125,14 +125,14 @@ public class BarbersController : ControllerBase
         
         try
         {
-            var vacantHours = await _barberService.GetBusyHours(id, daysAhead);
+            var busyHours = await _barberService.GetBusyHours(id, daysAhead);
 
-            if (vacantHours.Count == 0)
+            if (busyHours.Count == 0)
             {
                 return NoContent();
             }
 
-            return Ok(vacantHours);
+            return Ok(busyHours);
         }
         catch (InvalidDataException ex)
         {

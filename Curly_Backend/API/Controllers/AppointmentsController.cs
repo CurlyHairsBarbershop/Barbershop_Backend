@@ -85,7 +85,9 @@ public class AppointmentsController : ControllerBase
             var newAppointment = await _appointmentService.Create(
                 barberId: request.BarberId,
                 clientId: client.Id,
-                at: DateTime.Parse(request.At),
+                at: DateTime.Parse(request.At) >= DateTime.Now
+                    ? DateTime.Parse(request.At)
+                    : throw new InvalidOperationException("invalid date and time"),
                 serviceIds: request.ServiceIds.ToArray());
             
             _logger.LogInformation(
