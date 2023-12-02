@@ -1,3 +1,4 @@
+using API.Models.Account;
 using API.Models.Auth;
 using API.Services.AuthService;
 using Core;
@@ -84,5 +85,51 @@ public class AccountController : ControllerBase
             userInfo.Email,
             userInfo.PhoneNumber
         });
+    }
+
+    [Route("")]
+    [HttpPost]
+    public async Task<IActionResult> Edit([FromBody] EditPersonalInfoRequest request)
+    {
+        var userEmailClaim = Request.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "Email");
+        var userInfo = await _userManager.Users.FirstOrDefaultAsync(u => u.Email == userEmailClaim.Value);
+
+        if (!string.IsNullOrWhiteSpace(request.LastName)) userInfo.LastName = request.LastName;
+        if (!string.IsNullOrWhiteSpace(request.Name)) userInfo.FirstName = request.Name;
+
+        var result = await _userManager.UpdateAsync(userInfo);
+
+        return result.Succeeded
+            ? Ok()
+            : StatusCode(StatusCodes.Status500InternalServerError, "could not update information");
+    }
+
+    [Route("password")]
+    [HttpPost]
+    public async Task<IActionResult> ChangePassword([FromBody] EditPasswordRequest request)
+    {
+        var userEmailClaim = Request.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "Email");
+        var userInfo = await _userManager.Users.FirstOrDefaultAsync(u => u.Email == userEmailClaim.Value);
+        
+        if (request.CurrentPassword == request.NewPassword)
+        {
+            return BadRequest("same values");
+        }
+
+        if (!(await _userManager.CheckPasswordAsync(userInfo, request.CurrentPassword)))
+        {
+            return BadRequest("invalid current password");
+        }
+
+        if (await _userManager.CheckPasswordAsync(userInfo, request.NewPassword))
+        {
+            return BadRequest("cannot change to current password");
+        }
+
+        var changeResult = await _userManager.ChangePasswordAsync(userInfo, request.CurrentPassword, request.NewPassword);
+
+        return changeResult.Succeeded
+            ? Ok()
+            : StatusCode(StatusCodes.Status500InternalServerError, "could not update password");
     }
 }
