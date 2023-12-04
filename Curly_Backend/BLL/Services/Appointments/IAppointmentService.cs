@@ -9,4 +9,6 @@ public interface IAppointmentService
     Task<Appointment> GetById(int id);
 
     Task<Appointment> Create(int barberId, int clientId, DateTime at, params int[] serviceIds);
+
+    Task<bool> Cancel(int id);
 }

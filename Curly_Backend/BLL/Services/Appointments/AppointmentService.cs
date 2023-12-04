@@ -1,4 +1,5 @@
 using Core;
+using Core.Extensions;
 using DAL.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -68,5 +69,21 @@ public class AppointmentService : IAppointmentService
         await _dbContext.SaveChangesAsync();
 
         return newAppointment;
+    }
+
+    public async Task<bool> Cancel(int id)
+    {
+        var appointment = await _dbContext.Appointments.FirstOrDefaultAsync(a => a.Id == id);
+
+        if (appointment is null)
+        {
+            throw new InvalidDataException($"appointment with id {id} was not found");
+        }
+
+        appointment.Cancel();
+        
+        var result = await _dbContext.SaveChangesAsync();
+
+        return result > 0;
     }
 }
