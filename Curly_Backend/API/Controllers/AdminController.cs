@@ -31,6 +31,7 @@ public class AdminController : ControllerBase
     
     [Route("login")]
     [HttpPost]
+    [AllowAnonymous]
     public async Task<IActionResult> Login(LoginModel loginModel)
     {
         var loginResponse = await _clientAuthService.Login(loginModel);
