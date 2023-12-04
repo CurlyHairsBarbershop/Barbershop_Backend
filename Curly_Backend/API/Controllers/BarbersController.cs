@@ -27,7 +27,8 @@ public class BarbersController : ControllerBase
     public BarbersController(
         IUserReader<Barber> barberReader,
         BarberService barberService,
-        ILogger<BarbersController> logger, UserManager<Barber> barberManager, IAuthService<Barber> barberAuthService)
+        ILogger<BarbersController> logger, 
+        IAuthService<Barber> barberAuthService)
     {
         _barberReader = barberReader;
         _barberService = barberService;
@@ -99,8 +100,9 @@ public class BarbersController : ControllerBase
                 content: commentary.Content,
                 rating: commentary.Rating);
 
-            _logger.LogInformation("{Role} {Email} posted a commentary to barber {BarberEmail}", nameof(Client),
-                memberEmail, commentary.BarberEmail);
+            _logger.LogInformation(
+                "{Role} {Email} posted a commentary to barber {BarberEmail}", 
+                nameof(Client), memberEmail, commentary.BarberEmail);
 
             return Ok(barber.ToBarberWithReviewsDto());
         }
@@ -119,13 +121,10 @@ public class BarbersController : ControllerBase
             .Include(b => b.Reviews)!
             .ThenInclude(r => r.Publisher)
             .ToListAsync();
-        if (!barbers.Any())
-        {
-            return NoContent();
-        }
+        
+        if (!barbers.Any()) return NoContent();
 
-        return Ok(barbers.Select(b =>
-            b.ToBarberWithReviewsDto()));
+        return Ok(barbers.Select(b => b.ToBarberWithReviewsDto()));
     }
 
     [HttpPost]
@@ -181,16 +180,13 @@ public class BarbersController : ControllerBase
 
         try
         {
-            var busyHours = await _barberService.GetBusyHours(id, daysAhead);
+            var busyHours = await _barberService.GetVacantHours(id, daysAhead);
 
-            if (busyHours.Count == 0)
-            {
-                return NoContent();
-            }
+            if (busyHours.Count == 0) return NoContent();
 
             return Ok(busyHours);
         }
-        catch (InvalidDataException ex)
+        catch (BarberNotFoundException ex)
         {
             _logger.LogError(
                 ex,

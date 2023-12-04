@@ -97,7 +97,7 @@ public class BarberService
         return barber;
     }
 
-    public async Task<ImmutableList<DateTime>> GetBusyHours(
+    public async Task<ImmutableList<DateTime>> GetVacantHours(
         int barberId,
         int daysAhead)
     {
@@ -107,7 +107,7 @@ public class BarberService
 
         if (barber is null)
         {
-            throw new InvalidDataException($"Barber with id {barberId} does not exist");
+            throw new BarberNotFoundException(barberId);
         }
 
         var hoursGroups = barber.Appointments?
@@ -117,7 +117,7 @@ public class BarberService
                 day.Any(appointment => appointment.At.AddHours(1) > DateTime.Now))
             .Take(daysAhead)
             .SelectMany(d => d.Select(v => v.At))
-            .ToImmutableList() ?? ImmutableList<DateTime>.Empty;
+            .ToImmutableList();
 
         return hours;
     }
