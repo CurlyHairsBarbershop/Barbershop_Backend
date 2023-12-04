@@ -11,7 +11,7 @@ namespace API.Controllers;
 
 [Route("account")]
 [ApiController]
-[Authorize(Roles = nameof(Client))]
+[Authorize]
 public class AccountController : ControllerBase
 {
     private readonly IAuthService<Client> _clientAuthService;
