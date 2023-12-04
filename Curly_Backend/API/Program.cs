@@ -4,7 +4,6 @@ using BLL.Services.Favor;
 using BLL.Services.Reviews;
 using Core;
 using DAL.Context;
-using Infrustructure.Extensions.DI.UserServices;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +12,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using API.Models.Options;
 using API.Services.AuthService;
-using Infrustructure.Extensions.DI.BLL;
+using BLL.Extensions.DI.BLL;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors();

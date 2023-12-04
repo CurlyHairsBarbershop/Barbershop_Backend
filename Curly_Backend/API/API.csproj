@@ -32,4 +32,8 @@
       <ProjectReference Include="..\Infrustructure\Infrustructure.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Extensions\" />
+    </ItemGroup>
+
 </Project>

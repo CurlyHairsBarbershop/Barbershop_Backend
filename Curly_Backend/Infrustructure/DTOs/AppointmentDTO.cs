@@ -1,4 +1,3 @@
-using Core;
 using Infrustructure.DTOs.Barbers;
 
 namespace Infrustructure.DTOs;
@@ -11,7 +10,7 @@ public class AppointmentDTO
     
     public BarberDTO Barber { get; set; }
     
-    public List<Favor> Favors { get; set; }
+    public List<FavorDTO> Favors { get; set; }
 
     public double TotalCost { get; set; }
 }

@@ -1,11 +1,11 @@
+using BLL.Extensions.DI.UserServices;
 using BLL.Services.Appointments;
 using BLL.Services.Favor;
 using BLL.Services.Reviews;
-using Infrustructure.Extensions.DI.UserServices;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace Infrustructure.Extensions.DI.BLL;
+namespace BLL.Extensions.DI.BLL;
 
 public static class BllActivator 
 {

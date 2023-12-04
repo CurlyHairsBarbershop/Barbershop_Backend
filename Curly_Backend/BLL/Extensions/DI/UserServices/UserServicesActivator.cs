@@ -4,7 +4,7 @@ using Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace Infrustructure.Extensions.DI.UserServices;
+namespace BLL.Extensions.DI.UserServices;
 
 public static class UserServicesActivator
 {

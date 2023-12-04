@@ -1,9 +1,9 @@
 using Core;
 using Infrustructure.DTOs;
 
-namespace Infrustructure.Extensions.Users;
+namespace API.Extensions.DTOs.Users;
 
-public static class UserExtensions
+public static class ToDtoExtensions
 {
     public static PublisherDTO ToPublisherDto(this ApplicationUser source)
     {

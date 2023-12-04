@@ -1,18 +1,18 @@
+using API.Extensions.DTOs.Users;
 using Core;
 using Infrustructure.DTOs;
 using Infrustructure.DTOs.Barbers;
-using Infrustructure.Extensions.Users;
 
-namespace Infrustructure.Extensions.Barbers;
+namespace API.Extensions.DTOs.Barbers;
 
-public static partial class BarberExtensions
+public static partial class ToDtoExtensions
 {
     public static BarberWithReviewsDTO ToBarberWithReviewsDto(this Barber b)
     {
         return new BarberWithReviewsDTO
         {
             Id = b.Id,
-            Email = b.Email ?? string.Empty,
+            Email = b.Email,
             Name = b.FirstName,
             LastName = b.LastName,
             PhoneNumber = b.PhoneNumber ?? string.Empty,
