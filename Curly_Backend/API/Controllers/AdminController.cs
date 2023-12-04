@@ -1,4 +1,3 @@
-using API.Models.Admin;
 using API.Models.Auth;
 using API.Services.AuthService;
 using BLL.Services.Appointments;
@@ -13,19 +12,16 @@ namespace API.Controllers;
 [Authorize(Roles = nameof(Admin))]
 public class AdminController : ControllerBase
 {
-    private readonly IAuthService<Admin> _clientAuthService;
-    private readonly UserManager<Admin> _adminManager;
+    private readonly IAuthService<Admin> _authService;
     private readonly UserManager<Barber> _barberManager;
-    private readonly ILogger<AccountController> _logger;
+    private readonly ILogger<AdminController> _logger;
     private readonly AppointmentService _appointmentService;
 
     public AdminController(
-        IAuthService<Admin> clientAuthService, 
-        UserManager<Admin> adminManager, 
-        ILogger<AccountController> logger)
+        IAuthService<Admin> authService,
+        ILogger<AdminController> logger)
     {
-        _clientAuthService = clientAuthService;
-        _adminManager = adminManager;
+        _authService = authService;
         _logger = logger;
     }
     
@@ -33,17 +29,18 @@ public class AdminController : ControllerBase
     [HttpPost]
     [AllowAnonymous]
     public async Task<IActionResult> Login(LoginModel loginModel)
-    {
-        var loginResponse = await _clientAuthService.Login(loginModel);
+    { 
+        var memberEmail = Request.HttpContext.User.Claims
+            .FirstOrDefault(c => c.Type == "Email")?.Value ?? "anonymous";
+        
+        var loginResponse = await _authService.Login(loginModel);
 
         if (loginResponse.Result.Succeeded == false)
         {
+            _logger.LogError("{Email} could not login as admin, reason: {Message}", memberEmail, loginResponse.Error);
             return BadRequest(loginResponse.Error);
         }
         
-        return Accepted(new
-        {
-            token = loginResponse.Token
-        });
+        return Ok(new { token = loginResponse.Token });
     }
 }

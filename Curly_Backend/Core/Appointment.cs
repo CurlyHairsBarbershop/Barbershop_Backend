@@ -11,7 +11,7 @@ public class Appointment
         set => _at = value.ToUniversalTime();
     }
     
-    public bool IsCancelled { get; internal set; }
+    public bool IsCancelled { get; set; }
     
     public double TotalCost => Favors?.Select(f => f.Cost).DefaultIfEmpty(0).Sum() ?? 0.0;
     

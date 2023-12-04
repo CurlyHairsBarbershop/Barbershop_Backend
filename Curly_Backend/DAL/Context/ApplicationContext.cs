@@ -33,6 +33,7 @@ public class ApplicationContext : IdentityDbContext<ApplicationUser, IdentityRol
         
         builder.Entity<Client>().HasMany(c => c.Appointments).WithOne(a => a.Client);
         builder.Entity<Client>().HasMany(c => c.Reviews).WithOne(r => r.Publisher);
+        builder.Entity<Client>().HasMany(c => c.FavouriteBarbers).WithMany();
         
         builder.Entity<Favor>().HasKey(f => f.Id);
         builder.Entity<Favor>().Property(e => e.Id).UseIdentityAlwaysColumn();

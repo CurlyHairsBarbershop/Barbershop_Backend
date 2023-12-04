@@ -3,6 +3,7 @@ using System;
 using DAL.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DAL.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20231204181549_appointments_cancel")]
+    partial class appointments_cancel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -35,21 +38,6 @@ namespace DAL.Migrations
                     b.HasIndex("FavorsId");
 
                     b.ToTable("AppointmentFavor");
-                });
-
-            modelBuilder.Entity("BarberClient", b =>
-                {
-                    b.Property<int>("ClientId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("FavouriteBarbersId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("ClientId", "FavouriteBarbersId");
-
-                    b.HasIndex("FavouriteBarbersId");
-
-                    b.ToTable("BarberClient");
                 });
 
             modelBuilder.Entity("Core.ApplicationUser", b =>
@@ -153,7 +141,7 @@ namespace DAL.Migrations
                     b.Property<DateTime>("PlacedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasDefaultValue(new DateTime(2023, 12, 4, 18, 31, 2, 278, DateTimeKind.Utc).AddTicks(200));
+                        .HasDefaultValue(new DateTime(2023, 12, 4, 18, 15, 49, 876, DateTimeKind.Utc).AddTicks(1020));
 
                     b.HasKey("Id");
 
@@ -402,7 +390,7 @@ namespace DAL.Migrations
                         {
                             Id = -1,
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "873849a5-9b2c-4b25-ae48-3b8444f94d52",
+                            ConcurrencyStamp = "5509c107-e6ef-4fd8-826c-25fc0f438d37",
                             Email = "johnjj@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "John",
@@ -416,7 +404,7 @@ namespace DAL.Migrations
                         {
                             Id = -2,
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "932dfbb6-bf02-4e8f-bb4d-377658498562",
+                            ConcurrencyStamp = "215586de-b16b-4844-aa36-032eb1db0dc5",
                             Email = "alext@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Alex",
@@ -430,7 +418,7 @@ namespace DAL.Migrations
                         {
                             Id = -3,
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "2f791df8-3da4-4dc1-9dfa-1cd12408f245",
+                            ConcurrencyStamp = "d9c5eb93-32d4-4a2d-86e5-b0d29cc1022c",
                             Email = "maxbobryk@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Maksym",
@@ -444,7 +432,7 @@ namespace DAL.Migrations
                         {
                             Id = -4,
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "8dc65806-ccf7-4d3d-8b59-11cf94f27edb",
+                            ConcurrencyStamp = "c5d3504e-4f29-47b1-8ea0-99c944c669a0",
                             Email = "20werasdf@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Mykhailo",
@@ -474,21 +462,6 @@ namespace DAL.Migrations
                     b.HasOne("Core.Favor", null)
                         .WithMany()
                         .HasForeignKey("FavorsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("BarberClient", b =>
-                {
-                    b.HasOne("Core.Client", null)
-                        .WithMany()
-                        .HasForeignKey("ClientId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Core.Barber", null)
-                        .WithMany()
-                        .HasForeignKey("FavouriteBarbersId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

@@ -1,11 +1,13 @@
 using API.Models.Account;
 using API.Models.Auth;
 using API.Services.AuthService;
+using BLL.Services.Users;
 using Core;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace API.Controllers;
 
@@ -17,15 +19,17 @@ public class AccountController : ControllerBase
     private readonly IAuthService<Client> _clientAuthService;
     private readonly UserManager<Client> _userManager;
     private readonly ILogger<AccountController> _logger;
+    private readonly BarberService _barberService;
     
     public AccountController(
         IAuthService<Client> clientAuthService, 
         UserManager<Client> userManager, 
-        ILogger<AccountController> logger)
+        ILogger<AccountController> logger, BarberService barberService)
     {
         _clientAuthService = clientAuthService;
         _userManager = userManager;
         _logger = logger;
+        _barberService = barberService;
     }
     
     [AllowAnonymous]
@@ -63,7 +67,7 @@ public class AccountController : ControllerBase
             return BadRequest(loginResponse.Error);
         }
         
-        return Accepted(new
+        return Ok(new
         {
             token = loginResponse.Token
         });
@@ -131,5 +135,16 @@ public class AccountController : ControllerBase
         return changeResult.Succeeded
             ? Ok()
             : StatusCode(StatusCodes.Status500InternalServerError, "could not update password");
+    }
+
+    [Route("favourite-barbers")]
+    [HttpGet]
+    public async Task<IActionResult> GetFavouriteBarbers()
+    {
+        var memberEmail = Request.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "Email");
+        var userInfo = await _userManager.FindByEmailAsync(memberEmail.Value);
+        var favouriteBarbers = await _barberService.GetFavouriteBarbers(userInfo.Id);
+
+        return Ok(JsonConvert.SerializeObject(favouriteBarbers));
     }
 }

@@ -6,10 +6,10 @@ public static class IdentityHelper
     {
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+";
 
-        Random random = new Random();
+        var random = new Random();
         
         // Generate at least one character of each type
-        string password = new string(new[]
+        var password = new string(new[]
         {
             chars[random.Next(chars.Length / 2)],         // Uppercase letter
             chars[random.Next(chars.Length / 2, chars.Length)],   // Lowercase letter
@@ -18,7 +18,7 @@ public static class IdentityHelper
         });
 
         // Generate the rest of the password
-        for (int i = password.Length; i < 8; i++)
+        for (var i = password.Length; i < 8; i++)
         {
             password += chars[random.Next(chars.Length)];
         }

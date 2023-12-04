@@ -33,6 +33,11 @@ builder.Services
     .AddRoles<IdentityRole<int>>()
     .AddEntityFrameworkStores<ApplicationContext>()
     .AddDefaultTokenProviders();
+builder.Services
+    .AddIdentityCore<Admin>()
+    .AddRoles<IdentityRole<int>>()
+    .AddEntityFrameworkStores<ApplicationContext>()
+    .AddDefaultTokenProviders();
 
 var secret = builder.Configuration.GetSection("Jwt:Key").Value ?? throw new InvalidDataException("jwt key was not provided");
 var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secret));
@@ -147,16 +152,16 @@ static void InitializeDatabase(IApplicationBuilder app, WebApplicationBuilder bu
     {
         var pers = serviceScope.ServiceProvider.GetRequiredService<ApplicationContext>();
         var migrations = pers.Database.GetPendingMigrations();
-        if (migrations.Any())
-        {
-            pers.Database.Migrate();
+        
+        if (!migrations.Any()) return;
+        
+        pers.Database.Migrate();
 
-            foreach (var migration in migrations)
-            {
-                logger.LogInformation("Migration applied: {MigrationName} {ContextName}", migration, nameof(ApplicationContext));
-            }
+        foreach (var migration in migrations)
+        {
+            logger.LogInformation("Migration applied: {MigrationName} {ContextName}", migration, nameof(ApplicationContext));
         }
-            
+
     }
     catch (Exception ex)
     {

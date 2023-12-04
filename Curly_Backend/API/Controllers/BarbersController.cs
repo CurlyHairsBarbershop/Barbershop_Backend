@@ -20,6 +20,7 @@ namespace API.Controllers;
 public class BarbersController : ControllerBase
 {
     private readonly IUserReader<Barber> _barberReader;
+    private readonly UserManager<Client> _clientManager;
     private readonly BarberService _barberService;
     private readonly IAuthService<Barber> _barberAuthService;
     private readonly ILogger<BarbersController> _logger;
@@ -28,12 +29,68 @@ public class BarbersController : ControllerBase
         IUserReader<Barber> barberReader,
         BarberService barberService,
         ILogger<BarbersController> logger, 
-        IAuthService<Barber> barberAuthService)
+        IAuthService<Barber> barberAuthService, 
+        UserManager<Client> clientManager)
     {
         _barberReader = barberReader;
         _barberService = barberService;
         _logger = logger;
         _barberAuthService = barberAuthService;
+        _clientManager = clientManager;
+    }
+
+    [Route("favourite/{id:int}")]
+    [HttpDelete]
+    [Authorize(Roles = nameof(Client))]
+    public async Task<IActionResult> DeleteFavouriteBarber(int id)
+    {
+        var memberEmail = Request.HttpContext.User.Claims
+            .FirstOrDefault(c => c.Type == "Email")?.Value ?? string.Empty;
+        var client = await _clientManager.FindByEmailAsync(memberEmail);
+
+        try
+        {
+            await _barberService.DeleteFavouriteBarber(client, id);
+
+            _logger.LogInformation(
+                "{Role} {Email} deleted favourite barber with id {barberId}", 
+                nameof(Client), memberEmail, id);
+            return Ok("barber has been deleted from favourites");
+        }
+        catch (BarberNotFoundException ex)
+        {
+            _logger.LogError(
+                "{Role} {Email} could not delete favourite barber, reason: {Message}", 
+                nameof(Client), memberEmail, ex.Message);
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Route("favourite/{id:int}")]
+    [HttpPatch]
+    [Authorize(Roles = nameof(Client))]
+    public async Task<IActionResult> AddFavouriteBarber(int id)
+    {
+        var memberEmail = Request.HttpContext.User.Claims
+            .FirstOrDefault(c => c.Type == "Email")?.Value ?? string.Empty;
+        var client = await _clientManager.FindByEmailAsync(memberEmail);
+
+        try
+        {
+            await _barberService.AddFavouriteBarber(client, id);
+
+            _logger.LogInformation(
+                "{Role} {Email} added favourite barber with id {barberId}", 
+                nameof(Client), memberEmail, id);
+            return Ok("barber has been added to favourites");
+        }
+        catch (BarberNotFoundException ex)
+        {
+            _logger.LogError(
+                "{Role} {Email} could not add favourite barber, reason: {Message}", 
+                nameof(Client), memberEmail, ex.Message);
+            return BadRequest(ex.Message);
+        }
     }
 
     [Route("{id:int}")]
@@ -174,7 +231,7 @@ public class BarbersController : ControllerBase
     [Route("{id}/schedule")]
     public async Task<IActionResult> Get(
         int id,
-        [FromQuery] int daysAhead = 1)
+        [FromQuery] int daysAhead = 1) 
     {
         var currentUserEmail = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "Email")?.Value ?? "Anonymous";
 

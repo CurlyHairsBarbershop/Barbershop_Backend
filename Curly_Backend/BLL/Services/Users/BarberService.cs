@@ -121,4 +121,42 @@ public class BarberService
 
         return hours;
     }
+    
+    public async Task<bool> AddFavouriteBarber(Client client, int favouriteBarberId)
+    {
+        var barber = await _dbContext.Barbers.FirstOrDefaultAsync(b => b.Id == favouriteBarberId);
+
+        if (barber is null) throw new BarberNotFoundException(favouriteBarberId);
+
+        client.FavouriteBarbers ??= new List<Barber>();
+        client.FavouriteBarbers.Add(barber);
+
+        var saveResult = await _dbContext.SaveChangesAsync();
+
+        return saveResult > 0;
+    }
+    
+    public async Task<ImmutableList<Barber>> GetFavouriteBarbers(int clientId)
+    {
+        var barbers = (await _dbContext.Clients
+            .Include(c => c.FavouriteBarbers)
+            .FirstOrDefaultAsync(c => c.Id == clientId))
+            .FavouriteBarbers
+            .ToImmutableList();
+
+        return barbers;
+    }
+
+    public async Task<bool> DeleteFavouriteBarber(Client client, int id)
+    {
+        var dbClient = await _dbContext.Clients
+            .Include(c => c.FavouriteBarbers)
+            .FirstOrDefaultAsync(c => c.Id == client.Id);
+        var barber = dbClient.FavouriteBarbers.FirstOrDefault(b => b.Id == id);
+        dbClient.FavouriteBarbers.Remove(barber);
+
+        var result = await _dbContext.SaveChangesAsync();
+
+        return result > 0;
+    }
 }
