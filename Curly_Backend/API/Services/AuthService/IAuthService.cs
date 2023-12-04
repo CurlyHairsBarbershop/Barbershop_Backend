@@ -6,6 +6,7 @@ namespace API.Services.AuthService;
 
 public interface IAuthService<TUser> where TUser : ApplicationUser
 {
+    Task<(SignInResult Result, string? Token, string? Error)> Register(TUser createUser, string password);
     Task<(SignInResult Result, string? Token, string? Error)> Register(RegisterModel registerModel);
     Task<(SignInResult Result, string? Token, string? Error)> Login(LoginModel loginModel);
 }

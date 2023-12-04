@@ -22,6 +22,36 @@ public class AuthService<TUser> : IAuthService<TUser> where TUser : ApplicationU
         _options = options;
         _logger = logger;
     }
+    
+    public async Task<(SignInResult Result, string? Token, string? Error)> Register(TUser createUser, string password)
+    {
+        var userExists = _userManager.Users.Any(b => createUser.Email == b.Email);
+
+        if (userExists)
+        {
+            _logger.LogWarning(
+                "Could not register {Role} {Email}: already exists", 
+                typeof(TUser).Name, createUser.Email);
+            return (SignInResult.NotAllowed, null, "member already exists");
+        }
+        
+        var result = await _userManager.CreateAsync(createUser, password);
+
+        if (!result.Succeeded) return (SignInResult.Failed, null, result.Errors.FirstOrDefault()?.Description);
+        
+        var user = await _userManager.FindByEmailAsync(createUser.Email);
+        var role = typeof(TUser).Name;
+            
+        await _userManager.AddToRoleAsync(user, role);
+            
+        var token = new JwtProvider<TUser>(_options.Value)
+            .GenerateJwtTokenString(user, role);
+            
+        _logger.LogInformation("{Role} {Email} has registered successfully", role, createUser.Email);
+            
+        return (SignInResult.Success, token, null);
+
+    }
 
     public async Task<(SignInResult Result, string? Token, string? Error)> Register(RegisterModel registerModel)
     {
@@ -45,22 +75,20 @@ public class AuthService<TUser> : IAuthService<TUser> where TUser : ApplicationU
         
         var result = await _userManager.CreateAsync(newUser, registerModel.Password);
 
-        if (result.Succeeded)
-        {
-            var user = await _userManager.FindByEmailAsync(newUser.Email);
-            var role = typeof(TUser).Name;
+        if (!result.Succeeded) return (SignInResult.Failed, null, result.Errors.FirstOrDefault()?.Description);
+        
+        var user = await _userManager.FindByEmailAsync(newUser.Email);
+        var role = typeof(TUser).Name;
             
-            await _userManager.AddToRoleAsync(user, role);
+        await _userManager.AddToRoleAsync(user, role);
             
-            var token = new JwtProvider<TUser>(_options.Value)
-                .GenerateJwtTokenString(user, role);
+        var token = new JwtProvider<TUser>(_options.Value)
+            .GenerateJwtTokenString(user, role);
             
-            _logger.LogInformation("{Role} {Email} has registered successfully", role, registerModel.Email);
+        _logger.LogInformation("{Role} {Email} has registered successfully", role, registerModel.Email);
             
-            return (SignInResult.Success, token, null);
-        }
+        return (SignInResult.Success, token, null);
 
-        return (SignInResult.Failed, null, result.Errors.FirstOrDefault()?.Description);
     }
     
     public async Task<(SignInResult Result, string? Token, string? Error)> Login(LoginModel loginModel)
