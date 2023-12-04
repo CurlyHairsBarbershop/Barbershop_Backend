@@ -22,6 +22,7 @@ public class AppointmentService : IAppointmentService
     public IQueryable<Appointment> Get(int clientId)
     {
         return _dbContext.Appointments
+            .Include(a => a.Favors)
             .Include(a => a.Client)
             .Include(a => a.Barber)
             .Where(a => a.Client.Id == clientId);
