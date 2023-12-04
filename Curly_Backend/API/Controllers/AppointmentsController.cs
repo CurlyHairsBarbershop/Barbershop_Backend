@@ -1,11 +1,12 @@
+using API.Extensions.DTOs.Appointments;
 using API.Models.Appointments;
 using BLL.Services.Appointments;
 using Core;
-using Infrustructure.Extensions.Appointments;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using InvalidDataException = System.IO.InvalidDataException;
 
 namespace API.Controllers;
 
@@ -101,6 +102,25 @@ public class AppointmentsController : ControllerBase
                 "{Email} failed to create appointment: {Message}", 
                 client.Email, ex.Message);
             return BadRequest(ex.Message);
+        }
+    }
+
+    
+    [HttpPatch]
+    [Route("{id}")]
+    [Authorize(Roles = nameof(Admin))]
+    public async Task<IActionResult> Cancel(int id)
+    {
+        try
+        {
+            await _appointmentService.Cancel(id);
+
+            return Ok();
+        }
+        catch ( InvalidDataException e)
+        {
+            _logger.LogError("Appointment cancel operation aborted, reason: {Message}", e.Message);
+            return BadRequest(e.Message);
         }
     }
 }
