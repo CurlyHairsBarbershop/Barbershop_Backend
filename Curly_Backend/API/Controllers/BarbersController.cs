@@ -1,12 +1,16 @@
 using API.Extensions.DTOs.Barbers;
+using API.Global;
 using API.Models.Admin;
 using API.Models.Barbers;
 using API.Models.PageHandling;
 using API.Services.AuthService;
 using BLL.Services.Users;
+using BLL.Services.Users.Barbers;
 using Core;
 using Infrustructure.ErrorHandling.Exceptions.Barbers;
+using Infrustructure.Extensions;
 using Infrustructure.Helpers;
+using Infrustructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -20,32 +24,89 @@ namespace API.Controllers;
 public class BarbersController : ControllerBase
 {
     private readonly IUserReader<Barber> _barberReader;
+    private readonly UserManager<Barber> _barberManager;
     private readonly UserManager<Client> _clientManager;
     private readonly BarberService _barberService;
     private readonly IAuthService<Barber> _barberAuthService;
     private readonly ILogger<BarbersController> _logger;
+    private readonly BarberMediaService _barberMediaService;
 
     public BarbersController(
         IUserReader<Barber> barberReader,
+        UserManager<Barber> barberManager,
         BarberService barberService,
         ILogger<BarbersController> logger, 
         IAuthService<Barber> barberAuthService, 
         UserManager<Client> clientManager)
     {
         _barberReader = barberReader;
+        _barberManager = barberManager;
         _barberService = barberService;
         _logger = logger;
         _barberAuthService = barberAuthService;
         _clientManager = clientManager;
     }
 
-    [Route("favourite/{id:int}")]
+    [HttpPatch]
+    [Route("{id:int}")]
+    [Authorize(Roles = Roles.Admin)]
+    public async Task<IActionResult> EditBarber([FromRoute] int id, [FromBody] EditBarberRequest request)
+    {
+        var memberEmail = Request.GetMemberEmail();
+        
+        try
+        {
+            var barber = await _barberService.Get(id);
+    
+            if (!string.IsNullOrWhiteSpace(request.LastName))
+            {
+                barber.LastName = request.LastName;
+            }
+    
+            if (!string.IsNullOrWhiteSpace(request.Name))
+            {
+                barber.FirstName = request.Name;
+            }
+    
+            if (!string.IsNullOrWhiteSpace(request.Email))
+            {
+                barber.Email = request.Email;
+            }
+    
+            if (!string.IsNullOrWhiteSpace(request.Image))
+            {
+                if (request.Image.IsValidBase64(out var bytes))
+                {
+                    await _barberMediaService.SaveProfileImage(bytes, barber.Id.ToString());
+                }
+                else
+                {
+                    if (_barberMediaService.MediaExists(request.Image))
+                    {
+                        barber.Image = _barberMediaService.GetUrl(request.Image);
+                    }
+                }
+            }
+
+            await _barberManager.UpdateAsync(barber);
+            await _barberManager.UpdateNormalizedEmailAsync(barber);
+            
+            _logger.LogInformation("{Role} {Email} has edited barber with id {BarberId}", Roles.Admin, memberEmail, barber.Id);
+
+            return Ok();
+        }
+        catch (BarberNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+    }
+
     [HttpDelete]
-    [Authorize(Roles = nameof(Client))]
+    [Route("favourite/{id:int}")]
+    [Authorize(Roles = Roles.Client)]
     public async Task<IActionResult> DeleteFavouriteBarber(int id)
     {
-        var memberEmail = Request.HttpContext.User.Claims
-            .FirstOrDefault(c => c.Type == "Email")?.Value ?? string.Empty;
+        var memberEmail = Request.GetMemberEmail();
         var client = await _clientManager.FindByEmailAsync(memberEmail);
 
         try
@@ -66,9 +127,9 @@ public class BarbersController : ControllerBase
         }
     }
 
-    [Route("favourite/{id:int}")]
     [HttpPatch]
-    [Authorize(Roles = nameof(Client))]
+    [Route("favourite/{id:int}")]
+    [Authorize(Roles = Roles.Client)]
     public async Task<IActionResult> AddFavouriteBarber(int id)
     {
         var memberEmail = Request.HttpContext.User.Claims
@@ -93,9 +154,9 @@ public class BarbersController : ControllerBase
         }
     }
 
-    [Route("{id:int}")]
     [HttpDelete]
-    [Authorize(Roles = nameof(Admin))]
+    [Route("{id:int}")]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> Delete(int id)
     {
         var memberEmail = Request.HttpContext.User.Claims
@@ -119,9 +180,9 @@ public class BarbersController : ControllerBase
         }
     }
     
-    [Route("")]
     [HttpPost]
-    [Authorize(Roles = nameof(Admin))]
+    [Route("")]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> Create([FromBody] CreateBarberRequest request)
     {
         var newBarber = new Barber
@@ -143,11 +204,11 @@ public class BarbersController : ControllerBase
 
     [HttpPost]
     [Route("comment")]
-    [Authorize(Roles = nameof(Client))]
-    public async Task<IActionResult> AddComment([FromBody] BarberCommentary commentary)
+    [Authorize(Roles = Roles.Client)]
+    public async Task<IActionResult> PostReview([FromBody] BarberCommentary commentary)
     {
-        var memberEmail = Request.HttpContext.User.Claims
-            .FirstOrDefault(c => c.Type == "Email")?.Value ?? string.Empty;
+        var memberEmail = Request.GetMemberEmail();
+        var memberRole = Request.GetMemberRole();
         try
         {
             var barber = await _barberService.AddComment(
@@ -159,7 +220,7 @@ public class BarbersController : ControllerBase
 
             _logger.LogInformation(
                 "{Role} {Email} posted a commentary to barber {BarberEmail}", 
-                nameof(Client), memberEmail, commentary.BarberEmail);
+                memberRole, memberEmail, commentary.BarberEmail);
 
             return Ok(barber.ToBarberWithReviewsDto());
         }
@@ -185,22 +246,30 @@ public class BarbersController : ControllerBase
     }
 
     [HttpPost]
-    [Route("reply")]
-    [Authorize(Roles = nameof(Client))]
-    public async Task<IActionResult> PostReply([FromBody] PostReplyModel replyModel)
+    [Route("reply/{id:int}")]
+    [Authorize]
+    public async Task<IActionResult> PostReply(
+        [FromRoute] int id, 
+        [FromBody] PostReplyModel replyModel)
     {
+        var memberEmail = Request.GetMemberEmail();
+        var memberRole = Request.GetMemberRole();
+        
         try
         {
-            var review = await _barberService.PostReplyTo(
-                parentId: replyModel.ReviewId,
+            var reply = await _barberService.PostReply(
+                parentId: id,
                 content: replyModel.Content,
-                clientEmail: Request.HttpContext.User.Claims
-                    .FirstOrDefault(c => c.Type == "Email")?.Value ?? string.Empty);
-            return Accepted();
+                memberId: id);
+            _logger.LogInformation(
+                "{Role} {Email} posted a reply {ReplyId} to comment with id {CommentId}", 
+                memberRole, memberEmail, reply.Id, id);
+            return Ok($"reply {reply.Id} has been posted successfully");
         }
-        catch (Exception ex)
+        catch (Exception ex) when(ex is InvalidDataException or InvalidOperationException)
         {
-            _logger.LogError(ex, "{Message}", ex.Message);
+            _logger.LogError("{Role} {Email} could not post a reply to comment with id {CommentId}, reason: {Message}", 
+                memberRole, memberEmail, id, ex.Message);
             return BadRequest(ex.Message);
         }
     }

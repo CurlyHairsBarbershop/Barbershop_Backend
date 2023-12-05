@@ -12,7 +12,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using API.Models.Options;
 using API.Services.AuthService;
-using BLL.Extensions.DI.BLL;
+using BLL.Extensions.DI;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors();
@@ -67,7 +67,6 @@ builder.Services.TryAddScoped(typeof(IAuthService<>), typeof(AuthService<>));
 
 // INFO: Add business layer
 builder.Services.AddBll();
-
 builder.Services.AddControllers();
 builder.Services.Configure<IdentityOptions>(options =>
 {
@@ -85,6 +84,8 @@ builder.Services.Configure<JwtProviderOptions>(opt =>
 });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {

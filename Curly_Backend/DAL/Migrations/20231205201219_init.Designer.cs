@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DAL.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    [Migration("20231204183102_favourite_barbers")]
-    partial class favourite_barbers
+    [Migration("20231205201219_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -156,7 +156,7 @@ namespace DAL.Migrations
                     b.Property<DateTime>("PlacedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasDefaultValue(new DateTime(2023, 12, 4, 18, 31, 2, 278, DateTimeKind.Utc).AddTicks(200));
+                        .HasDefaultValue(new DateTime(2023, 12, 5, 20, 12, 19, 300, DateTimeKind.Utc).AddTicks(3800));
 
                     b.HasKey("Id");
 
@@ -191,16 +191,13 @@ namespace DAL.Migrations
                     b.ToTable("Favors");
                 });
 
-            modelBuilder.Entity("Core.Review", b =>
+            modelBuilder.Entity("Core.Reply", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BarberId")
-                        .HasColumnType("integer");
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -209,23 +206,16 @@ namespace DAL.Migrations
                     b.Property<int>("PublisherId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Rating")
+                    b.Property<int>("ReplyTo")
                         .HasColumnType("integer");
-
-                    b.Property<int?>("ReplyTo")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BarberId");
-
                     b.HasIndex("PublisherId");
 
-                    b.ToTable("Reviews");
+                    b.ToTable("Reply");
+
+                    b.UseTptMappingStrategy();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
@@ -405,7 +395,7 @@ namespace DAL.Migrations
                         {
                             Id = -1,
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "873849a5-9b2c-4b25-ae48-3b8444f94d52",
+                            ConcurrencyStamp = "f60c87d8-54aa-4475-87f3-3f97b5434913",
                             Email = "johnjj@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "John",
@@ -419,7 +409,7 @@ namespace DAL.Migrations
                         {
                             Id = -2,
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "932dfbb6-bf02-4e8f-bb4d-377658498562",
+                            ConcurrencyStamp = "c55d6499-51de-4642-9f30-37f2e2371512",
                             Email = "alext@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Alex",
@@ -433,7 +423,7 @@ namespace DAL.Migrations
                         {
                             Id = -3,
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "2f791df8-3da4-4dc1-9dfa-1cd12408f245",
+                            ConcurrencyStamp = "ba299268-3ccf-4dbd-b561-0d9f89af4362",
                             Email = "maxbobryk@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Maksym",
@@ -447,7 +437,7 @@ namespace DAL.Migrations
                         {
                             Id = -4,
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "8dc65806-ccf7-4d3d-8b59-11cf94f27edb",
+                            ConcurrencyStamp = "91a48aea-6804-4379-8f18-03fac5dfce60",
                             Email = "20werasdf@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Mykhailo",
@@ -464,6 +454,30 @@ namespace DAL.Migrations
                     b.HasBaseType("Core.ApplicationUser");
 
                     b.ToTable("Clients");
+                });
+
+            modelBuilder.Entity("Core.Review", b =>
+                {
+                    b.HasBaseType("Core.Reply");
+
+                    b.Property<int>("BarberId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ClientId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasIndex("BarberId");
+
+                    b.HasIndex("ClientId");
+
+                    b.ToTable("Reviews");
                 });
 
             modelBuilder.Entity("AppointmentFavor", b =>
@@ -515,21 +529,13 @@ namespace DAL.Migrations
                     b.Navigation("Client");
                 });
 
-            modelBuilder.Entity("Core.Review", b =>
+            modelBuilder.Entity("Core.Reply", b =>
                 {
-                    b.HasOne("Core.Barber", "Barber")
-                        .WithMany("Reviews")
-                        .HasForeignKey("BarberId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Core.Client", "Publisher")
-                        .WithMany("Reviews")
+                    b.HasOne("Core.ApplicationUser", "Publisher")
+                        .WithMany("Postings")
                         .HasForeignKey("PublisherId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Barber");
 
                     b.Navigation("Publisher");
                 });
@@ -610,6 +616,32 @@ namespace DAL.Migrations
                         .HasForeignKey("Core.Client", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Core.Review", b =>
+                {
+                    b.HasOne("Core.Barber", "Barber")
+                        .WithMany("Reviews")
+                        .HasForeignKey("BarberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Core.Client", null)
+                        .WithMany("Reviews")
+                        .HasForeignKey("ClientId");
+
+                    b.HasOne("Core.Reply", null)
+                        .WithOne()
+                        .HasForeignKey("Core.Review", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Barber");
+                });
+
+            modelBuilder.Entity("Core.ApplicationUser", b =>
+                {
+                    b.Navigation("Postings");
                 });
 
             modelBuilder.Entity("Core.Barber", b =>

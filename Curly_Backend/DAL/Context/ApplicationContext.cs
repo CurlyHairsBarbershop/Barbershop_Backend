@@ -25,6 +25,10 @@ public class ApplicationContext : IdentityDbContext<ApplicationUser, IdentityRol
     {
         builder.Entity<ApplicationUser>().Property(u => u.Id).UseIdentityAlwaysColumn();
         builder.Entity<ApplicationUser>().UseTptMappingStrategy();
+        builder.Entity<ApplicationUser>()
+            .HasMany(u => u.Postings)
+            .WithOne(p => p.Publisher)
+            .HasForeignKey(p => p.PublisherId);
         
         builder.Entity<Barber>().HasMany(b => b.Appointments).WithOne(a => a.Barber);
         builder.Entity<Barber>().HasMany(b => b.Reviews).WithOne(r => r.Barber);
@@ -32,19 +36,24 @@ public class ApplicationContext : IdentityDbContext<ApplicationUser, IdentityRol
         builder.Entity<Barber>().Ignore(b => b.Earnings);
         
         builder.Entity<Client>().HasMany(c => c.Appointments).WithOne(a => a.Client);
-        builder.Entity<Client>().HasMany(c => c.Reviews).WithOne(r => r.Publisher);
         builder.Entity<Client>().HasMany(c => c.FavouriteBarbers).WithMany();
         
         builder.Entity<Favor>().HasKey(f => f.Id);
         builder.Entity<Favor>().Property(e => e.Id).UseIdentityAlwaysColumn();
 
-        builder.Entity<Review>().HasKey(r => r.Id);
-        builder.Entity<Review>().Property(r => r.Id).UseIdentityAlwaysColumn();
+        builder.Entity<Reply>().HasKey(r => r.Id);
+        builder.Entity<Reply>().Property(r => r.Id).UseIdentityAlwaysColumn();
+        builder.Entity<Reply>().UseTptMappingStrategy();
         
         builder.Entity<Appointment>().HasKey(e => e.Id);
         builder.Entity<Appointment>().Property(e => e.Id).UseIdentityAlwaysColumn();
         builder.Entity<Appointment>().HasMany(a => a.Favors).WithMany();
         builder.Entity<Appointment>().Property(e => e.PlacedAt).HasDefaultValue(DateTime.UtcNow);
+        builder.Entity<Appointment>()
+            .Property(e => e.PlacedAt)
+            .HasConversion(
+                t => t.ToUniversalTime(), 
+                t => t.ToLocalTime());
         builder.Entity<Appointment>().Property(e => e.At);
         builder.Entity<Appointment>().Ignore(e => e.TotalCost);
         

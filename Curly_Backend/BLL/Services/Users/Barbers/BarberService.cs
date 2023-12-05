@@ -5,7 +5,7 @@ using Infrustructure.ErrorHandling.Exceptions.Barbers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace BLL.Services.Users;
+namespace BLL.Services.Users.Barbers;
 
 public class BarberService
 {
@@ -18,6 +18,15 @@ public class BarberService
         _barberManager = barberManager;
     }
 
+    public async Task<Barber> Get(int id)
+    {
+        var barber =  await _dbContext.Barbers.FirstOrDefaultAsync(b => b.Id == id);
+
+        if (barber is null) throw new BarberNotFoundException(id);
+
+        return barber;
+    }
+    
     public async Task<bool> Delete(int id)
     {
         var barber = await _dbContext.Barbers.FirstOrDefaultAsync(b => b.Id == id);
@@ -32,14 +41,25 @@ public class BarberService
         return result.Succeeded;
     }
 
-    public async Task<Review> PostReplyTo(string clientEmail, int parentId, string content)
+    
+    /// <summary>
+    /// Posts a reply to 
+    /// </summary>
+    /// <param name="to"></param>
+    /// <param name="parentId"></param>
+    /// <param name="content"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    /// <exception cref="InvalidDataException"></exception>
+    public async Task<Review> PostReply(int memberId, int parentId, string content)
     {
         var review = await _dbContext
             .Reviews
             .Include(r => r.Barber)
             .FirstOrDefaultAsync(r => r.Id == parentId);
 
-        var publisher = await _dbContext.Clients.FirstOrDefaultAsync(c => c.Email == clientEmail);
+        var publisher = await _dbContext.Users
+            .FirstOrDefaultAsync(c => c.Id == memberId);
 
         if (publisher is null)
         {

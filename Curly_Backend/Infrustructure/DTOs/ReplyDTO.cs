@@ -1,4 +1,4 @@
-namespace Infrustructure.DTOs.Barbers;
+namespace Infrustructure.DTOs;
 
 public class ReplyDTO
 {

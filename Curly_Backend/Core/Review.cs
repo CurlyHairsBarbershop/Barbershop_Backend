@@ -1,18 +1,10 @@
 namespace Core;
 
-public class Review
+public class Review : Reply
 {
-    public int Id { get; set; }
+    public string Title { get; set; }
     
     public int Rating { get; set; }
     
-    public int? ReplyTo { get; set; }
-    
-    public string Title { get; set; }
-    
-    public string Content { get; set; }
-    
     public Barber Barber { get; set; }
-    
-    public Client Publisher { get; set; }
 }

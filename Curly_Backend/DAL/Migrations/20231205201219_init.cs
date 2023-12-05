@@ -37,9 +37,9 @@ namespace DAL.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityAlwaysColumn),
                     FirstName = table.Column<string>(type: "text", nullable: false),
                     LastName = table.Column<string>(type: "text", nullable: false),
+                    Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
                     UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
-                    Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     NormalizedEmail = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     EmailConfirmed = table.Column<bool>(type: "boolean", nullable: false),
                     PasswordHash = table.Column<string>(type: "text", nullable: true),
@@ -89,6 +89,24 @@ namespace DAL.Migrations
                         name: "FK_AspNetRoleClaims_AspNetRoles_RoleId",
                         column: x => x.RoleId,
                         principalTable: "AspNetRoles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Admins",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false),
+                    AdminAlias = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Admins", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Admins_AspNetUsers_Id",
+                        column: x => x.Id,
+                        principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -182,7 +200,8 @@ namespace DAL.Migrations
                 name: "Barbers",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false),
+                    Image = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -213,13 +232,35 @@ namespace DAL.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Reply",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityAlwaysColumn),
+                    Content = table.Column<string>(type: "text", nullable: false),
+                    PublisherId = table.Column<int>(type: "integer", nullable: false),
+                    ReplyTo = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Reply", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Reply_AspNetUsers_PublisherId",
+                        column: x => x.PublisherId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Appointments",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityAlwaysColumn),
                     At = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    PlacedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValue: new DateTime(2023, 10, 15, 18, 11, 55, 541, DateTimeKind.Utc).AddTicks(7180)),
+                    IsCancelled = table.Column<bool>(type: "boolean", nullable: false),
+                    PlacedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValue: new DateTime(2023, 12, 5, 20, 12, 19, 300, DateTimeKind.Utc).AddTicks(3800)),
                     BarberId = table.Column<int>(type: "integer", nullable: false),
                     ClientId = table.Column<int>(type: "integer", nullable: false)
                 },
@@ -241,30 +282,57 @@ namespace DAL.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Review",
+                name: "BarberClient",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityAlwaysColumn),
-                    Rating = table.Column<int>(type: "integer", nullable: false),
-                    Title = table.Column<string>(type: "text", nullable: false),
-                    Content = table.Column<string>(type: "text", nullable: false),
-                    BarberId = table.Column<int>(type: "integer", nullable: false),
-                    PublisherId = table.Column<int>(type: "integer", nullable: false)
+                    ClientId = table.Column<int>(type: "integer", nullable: false),
+                    FavouriteBarbersId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Review", x => x.Id);
+                    table.PrimaryKey("PK_BarberClient", x => new { x.ClientId, x.FavouriteBarbersId });
                     table.ForeignKey(
-                        name: "FK_Review_Barbers_BarberId",
+                        name: "FK_BarberClient_Barbers_FavouriteBarbersId",
+                        column: x => x.FavouriteBarbersId,
+                        principalTable: "Barbers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_BarberClient_Clients_ClientId",
+                        column: x => x.ClientId,
+                        principalTable: "Clients",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Reviews",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false),
+                    Title = table.Column<string>(type: "text", nullable: false),
+                    Rating = table.Column<int>(type: "integer", nullable: false),
+                    BarberId = table.Column<int>(type: "integer", nullable: false),
+                    ClientId = table.Column<int>(type: "integer", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Reviews", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Reviews_Barbers_BarberId",
                         column: x => x.BarberId,
                         principalTable: "Barbers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Review_Clients_PublisherId",
-                        column: x => x.PublisherId,
+                        name: "FK_Reviews_Clients_ClientId",
+                        column: x => x.ClientId,
                         principalTable: "Clients",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Reviews_Reply_Id",
+                        column: x => x.Id,
+                        principalTable: "Reply",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -298,8 +366,31 @@ namespace DAL.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
+                    { -3, null, "Admin", "ADMIN" },
                     { -2, null, "Client", "CLIENT" },
                     { -1, null, "Barber", "BARBER" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "AspNetUsers",
+                columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "FirstName", "LastName", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
+                values: new object[,]
+                {
+                    { -4, 0, "91a48aea-6804-4379-8f18-03fac5dfce60", "20werasdf@gmail.com", false, "Mykhailo", "Tkachenko", false, null, null, null, null, "0970790944", false, null, false, null },
+                    { -3, 0, "ba299268-3ccf-4dbd-b561-0d9f89af4362", "maxbobryk@gmail.com", false, "Maksym", "Bobryk", false, null, null, null, null, "48934909434", false, null, false, null },
+                    { -2, 0, "c55d6499-51de-4642-9f30-37f2e2371512", "alext@gmail.com", false, "Alex", "Thompson", false, null, null, null, null, "9478920606", false, null, false, null },
+                    { -1, 0, "f60c87d8-54aa-4475-87f3-3f97b5434913", "johnjj@gmail.com", false, "John", "Johnson", false, null, null, null, null, "927804723", false, null, false, null }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Barbers",
+                columns: new[] { "Id", "Image" },
+                values: new object[,]
+                {
+                    { -4, null },
+                    { -3, null },
+                    { -2, null },
+                    { -1, null }
                 });
 
             migrationBuilder.CreateIndex(
@@ -355,19 +446,32 @@ namespace DAL.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Review_BarberId",
-                table: "Review",
+                name: "IX_BarberClient_FavouriteBarbersId",
+                table: "BarberClient",
+                column: "FavouriteBarbersId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reply_PublisherId",
+                table: "Reply",
+                column: "PublisherId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reviews_BarberId",
+                table: "Reviews",
                 column: "BarberId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Review_PublisherId",
-                table: "Review",
-                column: "PublisherId");
+                name: "IX_Reviews_ClientId",
+                table: "Reviews",
+                column: "ClientId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Admins");
+
             migrationBuilder.DropTable(
                 name: "AppointmentFavor");
 
@@ -387,7 +491,10 @@ namespace DAL.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "Review");
+                name: "BarberClient");
+
+            migrationBuilder.DropTable(
+                name: "Reviews");
 
             migrationBuilder.DropTable(
                 name: "Appointments");
@@ -397,6 +504,9 @@ namespace DAL.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "Reply");
 
             migrationBuilder.DropTable(
                 name: "Barbers");

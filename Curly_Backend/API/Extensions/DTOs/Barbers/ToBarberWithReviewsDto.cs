@@ -20,7 +20,6 @@ public static partial class ToDtoExtensions
             Rating = b.Rating,
             ImageUrl = b.Image ?? string.Empty,
             Reviews = b.Reviews?
-                .Where(r => r.ReplyTo is null)
                 .Select(r => new ReviewDTO
                 {
                     Id = r.Id,

@@ -1,8 +1,9 @@
 using API.Models.Account;
 using API.Models.Auth;
 using API.Services.AuthService;
-using BLL.Services.Users;
+using BLL.Services.Users.Barbers;
 using Core;
+using Infrustructure.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -117,17 +118,17 @@ public class AccountController : ControllerBase
         
         if (request.CurrentPassword == request.NewPassword)
         {
-            return BadRequest("same values");
+            return BadRequest("Same values");
         }
 
         if (!(await _userManager.CheckPasswordAsync(userInfo, request.CurrentPassword)))
         {
-            return BadRequest("invalid current password");
+            return BadRequest("Invalid current password");
         }
 
         if (await _userManager.CheckPasswordAsync(userInfo, request.NewPassword))
         {
-            return BadRequest("cannot change to current password");
+            return BadRequest("Cannot change to current password");
         }
 
         var changeResult = await _userManager.ChangePasswordAsync(userInfo, request.CurrentPassword, request.NewPassword);
@@ -141,8 +142,8 @@ public class AccountController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetFavouriteBarbers()
     {
-        var memberEmail = Request.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "Email");
-        var userInfo = await _userManager.FindByEmailAsync(memberEmail.Value);
+        var memberEmail = Request.GetMemberEmail();
+        var userInfo = await _userManager.FindByEmailAsync(memberEmail);
         var favouriteBarbers = await _barberService.GetFavouriteBarbers(userInfo.Id);
 
         return Ok(JsonConvert.SerializeObject(favouriteBarbers));
