@@ -11,6 +11,8 @@ public class AppointmentDTO
     public BarberDTO Barber { get; set; }
     
     public List<FavorDTO> Favors { get; set; }
+    
+    public bool Cancelled { get; set; }
 
     public double TotalCost { get; set; }
 }

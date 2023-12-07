@@ -1,6 +1,7 @@
 using Core;
 using Core.Extensions;
 using DAL.Context;
+using Infrustructure.ErrorHandling.Exceptions.Appointments;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -19,7 +20,25 @@ public class AppointmentService : IAppointmentService
         _logger = logger;
     }
 
-    public IQueryable<Appointment> Get(int clientId)
+   
+    public IQueryable<Appointment> GetAll()
+    {
+        return _dbContext.Appointments
+            .Include(a => a.Favors)
+            .Include(a => a.Client)
+            .Include(a => a.Barber);
+    }
+
+    public async Task<Appointment> Get(int id)
+    {
+        return await _dbContext.Appointments
+            .Include(a => a.Favors)
+            .Include(a => a.Client)
+            .Include(a => a.Barber)
+            .FirstOrDefaultAsync(a => a.Id == id) ?? throw new AppointmentNotFoundException(id);
+    }
+    
+    public IQueryable<Appointment> GetOfClient(int clientId)
     {
         return _dbContext.Appointments
             .Include(a => a.Favors)
@@ -27,11 +46,11 @@ public class AppointmentService : IAppointmentService
             .Include(a => a.Barber)
             .Where(a => a.Client.Id == clientId);
     }
-
-    public async Task<Appointment> GetById(int id)
+    
+    public async Task<Appointment> GetOfClientSpecific(int clientId, int id)
     {
-        return await _dbContext.Appointments.FirstOrDefaultAsync(a => a.Id == id) 
-               ?? throw new InvalidDataException($"Appointment with id {id} does not exist");
+        return await GetOfClient(clientId).FirstOrDefaultAsync(a => a.Id == id) 
+               ?? throw new AppointmentNotFoundException(id);
     }
 
     public async Task<Appointment> Create(int barberId, int clientId, DateTime at, params int[] serviceIds)

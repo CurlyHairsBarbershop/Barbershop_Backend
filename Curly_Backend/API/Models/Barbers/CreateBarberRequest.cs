@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace API.Models.Admin;
+namespace API.Models.Barbers;
 
 public class CreateBarberRequest
 {

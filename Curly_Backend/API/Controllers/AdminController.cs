@@ -1,3 +1,5 @@
+using API.Global;
+using API.Models.Admin;
 using API.Models.Auth;
 using API.Services.AuthService;
 using BLL.Services.Appointments;
@@ -28,19 +30,45 @@ public class AdminController : ControllerBase
     [Route("login")]
     [HttpPost]
     [AllowAnonymous]
-    public async Task<IActionResult> Login(LoginModel loginModel)
+    public async Task<IActionResult> Login([FromBody] LoginModel loginModel)
     { 
-        var memberEmail = Request.HttpContext.User.Claims
-            .FirstOrDefault(c => c.Type == "Email")?.Value ?? "anonymous";
-        
         var loginResponse = await _authService.Login(loginModel);
 
-        if (loginResponse.Result.Succeeded == false)
+        if (loginResponse.Result.Succeeded) return Ok(new { token = loginResponse.Token });
+        
+        _logger.LogInformation("{Role} login failed for {Email}", Roles.Admin, loginModel.Email);
+        
+        return BadRequest(loginResponse.Error);
+    }
+    
+    [AllowAnonymous]
+    [Route("register")]
+    [HttpPost]
+    public async Task<IActionResult> Register([FromBody] AdminRegisterModel registerModel)
+    {
+        if (registerModel.Password != registerModel.ConfirmPassword)
         {
-            _logger.LogError("{Email} could not login as admin, reason: {Message}", memberEmail, loginResponse.Error);
-            return BadRequest(loginResponse.Error);
+            return BadRequest("password and confirm password do not match");
+        }
+
+        var newAdmin = new Admin
+        {
+            FirstName = registerModel.Name,
+            LastName = registerModel.LastName,
+            Email = registerModel.Email,
+            AdminAlias = registerModel.Alias,
+        };
+        
+        var authResponse = await _authService.Register(newAdmin, registerModel.Password);
+
+        if (authResponse.Result.Succeeded == false)
+        {
+            return BadRequest(authResponse.Error);
         }
         
-        return Ok(new { token = loginResponse.Token });
+        return Created("/unsupported", new
+        {
+            token = authResponse.Token
+        });
     }
 }

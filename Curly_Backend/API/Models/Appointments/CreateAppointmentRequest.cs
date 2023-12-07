@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Infrustructure.Attributes.Validation;
+using Microsoft.AspNetCore.Mvc;
 
 namespace API.Models.Appointments;
 

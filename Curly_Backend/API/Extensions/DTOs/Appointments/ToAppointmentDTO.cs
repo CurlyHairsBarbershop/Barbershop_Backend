@@ -13,13 +13,15 @@ public static partial class ToDtoExtensions
             Id = appointment.Id,
             At = appointment.At,
             Barber = appointment.Barber.ToBarberDto(),
+            Cancelled = appointment.IsCancelled,
             Favors = appointment.Favors?.Select(f => new FavorDTO
             {
                 Cost = f.Cost,
                 Name = f.Name,
                 Description = f.Description,
                 Id = f.Id
-            }).ToList() ?? new List<FavorDTO>()
+            }).ToList() ?? new List<FavorDTO>(),
+            TotalCost = appointment.TotalCost
         };
     }
 }

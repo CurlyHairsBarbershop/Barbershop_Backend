@@ -34,6 +34,8 @@ public class AuthService<TUser> : IAuthService<TUser> where TUser : ApplicationU
                 typeof(TUser).Name, createUser.Email);
             return (SignInResult.NotAllowed, null, "member already exists");
         }
+
+        createUser.UserName ??= createUser.Email;
         
         var result = await _userManager.CreateAsync(createUser, password);
 

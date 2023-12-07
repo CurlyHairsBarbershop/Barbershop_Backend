@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using Core;
 using DAL.Context;
 using Infrustructure.ErrorHandling.Exceptions.Barbers;
+using Infrustructure.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,13 +12,55 @@ public class BarberService
 {
     private readonly ApplicationContext _dbContext;
     private readonly UserManager<Barber> _barberManager;
+    private readonly BarberMediaService _barberMediaService;
 
-    public BarberService(ApplicationContext dbContext, UserManager<Barber> barberManager)
+    public BarberService(ApplicationContext dbContext, UserManager<Barber> barberManager, BarberMediaService barberMediaService)
     {
         _dbContext = dbContext;
         _barberManager = barberManager;
+        _barberMediaService = barberMediaService;
     }
 
+    public async Task<Barber> Update(int id, string? name = null, string? lastName = null, string? email = null, string? image = null)
+    {
+        var barber = await Get(id);
+    
+        if (!string.IsNullOrWhiteSpace(lastName))
+        {
+            barber.LastName = lastName;
+        }
+    
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            barber.FirstName = name;
+        }
+    
+        if (!string.IsNullOrWhiteSpace(email))
+        {
+            barber.Email = email;
+        }
+    
+        if (!string.IsNullOrWhiteSpace(image))
+        {
+            if (image.IsValidBase64(out var bytes))
+            {
+                await _barberMediaService.SaveProfileImage(bytes, barber.Id.ToString());
+            }
+            else
+            {
+                if (_barberMediaService.MediaExists(image))
+                {
+                    barber.Image = _barberMediaService.GetUrl(image);
+                }
+            }
+        }
+
+        _dbContext.Update(barber);
+        await _dbContext.SaveChangesAsync();
+
+        return barber;
+    }
+    
     public async Task<Barber> Get(int id)
     {
         var barber =  await _dbContext.Barbers.FirstOrDefaultAsync(b => b.Id == id);
@@ -149,6 +192,10 @@ public class BarberService
         if (barber is null) throw new BarberNotFoundException(favouriteBarberId);
 
         client.FavouriteBarbers ??= new List<Barber>();
+
+        if (client.FavouriteBarbers.Any(fb => fb.Id == favouriteBarberId))
+            throw new FavouriteBarberAlreadyAddedException(favouriteBarberId);
+        
         client.FavouriteBarbers.Add(barber);
 
         var saveResult = await _dbContext.SaveChangesAsync();

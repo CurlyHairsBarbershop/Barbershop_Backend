@@ -13,6 +13,8 @@ using Microsoft.OpenApi.Models;
 using API.Models.Options;
 using API.Services.AuthService;
 using BLL.Extensions.DI;
+using Infrustructure.Extensions.DI;
+using Infrustructure.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors();
@@ -22,22 +24,27 @@ builder.Services.AddDbContext<ApplicationContext>(opt =>
 {
     opt.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSql"));
 });
-
+builder.Services.AddIdentityCore<ApplicationUser>()
+    .AddEntityFrameworkStores<ApplicationContext>()
+    .AddDefaultTokenProviders();
 builder.Services
     .AddIdentityCore<Barber>()
     .AddRoles<IdentityRole<int>>()
-    .AddEntityFrameworkStores<ApplicationContext>()
-    .AddDefaultTokenProviders();
+    .AddEntityFrameworkStores<ApplicationContext>();
+    // .AddDefaultTokenProviders();
 builder.Services
     .AddIdentityCore<Client>()
     .AddRoles<IdentityRole<int>>()
-    .AddEntityFrameworkStores<ApplicationContext>()
-    .AddDefaultTokenProviders();
+    .AddEntityFrameworkStores<ApplicationContext>();
+    // .AddDefaultTokenProviders();
 builder.Services
     .AddIdentityCore<Admin>()
     .AddRoles<IdentityRole<int>>()
-    .AddEntityFrameworkStores<ApplicationContext>()
-    .AddDefaultTokenProviders();
+    .AddEntityFrameworkStores<ApplicationContext>();
+    // .AddDefaultTokenProviders();
+    
+
+builder.Services.Configure<DataProtectionTokenProviderOptions>(opt => opt.TokenLifespan = TimeSpan.FromHours(1));
 
 var secret = builder.Configuration.GetSection("Jwt:Key").Value ?? throw new InvalidDataException("jwt key was not provided");
 var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secret));
@@ -67,7 +74,10 @@ builder.Services.TryAddScoped(typeof(IAuthService<>), typeof(AuthService<>));
 
 // INFO: Add business layer
 builder.Services.AddBll();
+builder.Services.AddEmailProcessing();
 builder.Services.AddControllers();
+builder.Services.Configure<MediaServiceOptions>(opt => 
+    opt.MediaFolder = builder.Configuration.GetSection("Media").GetSection("parent").Value);
 builder.Services.Configure<IdentityOptions>(options =>
 {
     options.Password.RequireDigit = true;

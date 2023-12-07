@@ -1,6 +1,5 @@
 using API.Extensions.DTOs.Barbers;
 using API.Global;
-using API.Models.Admin;
 using API.Models.Barbers;
 using API.Models.PageHandling;
 using API.Services.AuthService;
@@ -56,47 +55,16 @@ public class BarbersController : ControllerBase
         
         try
         {
-            var barber = await _barberService.Get(id);
-    
-            if (!string.IsNullOrWhiteSpace(request.LastName))
-            {
-                barber.LastName = request.LastName;
-            }
-    
-            if (!string.IsNullOrWhiteSpace(request.Name))
-            {
-                barber.FirstName = request.Name;
-            }
-    
-            if (!string.IsNullOrWhiteSpace(request.Email))
-            {
-                barber.Email = request.Email;
-            }
-    
-            if (!string.IsNullOrWhiteSpace(request.Image))
-            {
-                if (request.Image.IsValidBase64(out var bytes))
-                {
-                    await _barberMediaService.SaveProfileImage(bytes, barber.Id.ToString());
-                }
-                else
-                {
-                    if (_barberMediaService.MediaExists(request.Image))
-                    {
-                        barber.Image = _barberMediaService.GetUrl(request.Image);
-                    }
-                }
-            }
-
-            await _barberManager.UpdateAsync(barber);
-            await _barberManager.UpdateNormalizedEmailAsync(barber);
+            var updatedBarber = await _barberService.Update(id, request.Name, request.LastName, request.Email, request.Image);
             
-            _logger.LogInformation("{Role} {Email} has edited barber with id {BarberId}", Roles.Admin, memberEmail, barber.Id);
+            _logger.LogInformation("{Role} {Email} has edited barber with id {BarberId}", Roles.Admin, memberEmail, updatedBarber.Id);
 
-            return Ok();
+            return Ok($"Barber with id {id} updated");
         }
         catch (BarberNotFoundException ex)
         {
+            _logger.LogError("{Role} {Email} could not edited barber with id {BarberId}", Roles.Admin, memberEmail, id);
+            
             return NotFound(ex.Message);
         }
     }
@@ -132,8 +100,7 @@ public class BarbersController : ControllerBase
     [Authorize(Roles = Roles.Client)]
     public async Task<IActionResult> AddFavouriteBarber(int id)
     {
-        var memberEmail = Request.HttpContext.User.Claims
-            .FirstOrDefault(c => c.Type == "Email")?.Value ?? string.Empty;
+        var memberEmail = Request.GetMemberEmail();
         var client = await _clientManager.FindByEmailAsync(memberEmail);
 
         try
@@ -145,7 +112,7 @@ public class BarbersController : ControllerBase
                 nameof(Client), memberEmail, id);
             return Ok("barber has been added to favourites");
         }
-        catch (BarberNotFoundException ex)
+        catch (Exception ex) when(ex is BarberNotFoundException or FavouriteBarberAlreadyAddedException)
         {
             _logger.LogError(
                 "{Role} {Email} could not add favourite barber, reason: {Message}", 
@@ -226,6 +193,10 @@ public class BarbersController : ControllerBase
         }
         catch (InvalidDataException ex)
         {
+            _logger.LogError(
+                "{Role} {Email} could not post a commentary to barber {BarberEmail}", 
+                memberRole, memberEmail, commentary.BarberEmail);
+            
             return BadRequest(ex.Message);
         }
     }
@@ -284,16 +255,11 @@ public class BarbersController : ControllerBase
             .ThenInclude(r => r.Publisher)
             .ToListAsync();
 
-        if (!barbers.Any())
-        {
-            return NoContent();
-        }
+        if (!barbers.Any()) return NoContent();
 
         return Ok(barbers
-            .Select(b =>
-                b.ToBarberWithReviewsDto())
-            .OrderBy(b =>
-                b.Rating));
+            .Select(b => b.ToBarberWithReviewsDto())
+            .OrderBy(b => b.Rating));
     }
 
     [HttpGet]
@@ -302,7 +268,7 @@ public class BarbersController : ControllerBase
         int id,
         [FromQuery] int daysAhead = 1) 
     {
-        var currentUserEmail = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "Email")?.Value ?? "Anonymous";
+        var currentUserEmail = Request.GetMemberEmail();
 
         try
         {
@@ -314,9 +280,7 @@ public class BarbersController : ControllerBase
         }
         catch (BarberNotFoundException ex)
         {
-            _logger.LogError(
-                ex,
-                "{Email} could not fetch vacant dates: {Message}",
+            _logger.LogError("{Email} could not fetch vacant dates: {Message}",
                 currentUserEmail, ex.Message);
 
             return BadRequest(ex.Message);

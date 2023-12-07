@@ -68,6 +68,8 @@ public class ApplicationContext : IdentityDbContext<ApplicationUser, IdentityRol
             new Barber { Id = -2, FirstName = "Alex", LastName = "Thompson", Email = "alext@gmail.com", PhoneNumber = "9478920606" },
             new Barber { Id = -3, FirstName = "Maksym", LastName = "Bobryk", Email = "maxbobryk@gmail.com", PhoneNumber = "48934909434" },
             new Barber { Id = -4, FirstName = "Mykhailo", LastName = "Tkachenko", Email = "20werasdf@gmail.com", PhoneNumber = "0970790944" });
+
+        builder.Entity<Admin>().HasData(new Admin { Id = -10, FirstName = "Admin", LastName = "Admin", Email = "admin@gmail.com", PhoneNumber = "738741237823", AdminAlias = "Pidorg" });
         
         base.OnModelCreating(builder);
     }
